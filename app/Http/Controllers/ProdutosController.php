@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\AuthRequest;
 use App\Models\Marcas;
+use App\Models\Pedido;
 use App\Models\Produto;
 use App\Models\Compra;
 use App\Models\Fornecedor;
@@ -22,32 +23,60 @@ class ProdutosController extends Controller
             ->orderBy('id', 'DESC')
             ->get();
 
-        // Recupera a quantidade total de compras para cada produto
-        $compraCounts = Compra::select(DB::raw('produto_id, COUNT(*) as total_compras'))
-            ->groupBy('produto_id')
-            ->get()
-            ->keyBy('produto_id');
+        // Inicializa um array para armazenar a contagem de vendas por produto
+        $produtoVendas = [];
 
-        // Retorna a lista de produtos com informações da marca em formato JSON
+        // Recupera todos os pedidos
+        $pedidos = Pedido::all();
+
+        // Itera sobre os pedidos e contabiliza as vendas dos produtos
+        foreach ($pedidos as $pedido) {
+            // Decodifica o JSON dos produtos do pedido
+            $produtosPedido = json_decode($pedido->produtos, true);
+
+            // Verifica se o campo produtos foi decodificado corretamente
+            if (is_array($produtosPedido)) {
+                foreach ($produtosPedido as $produto) {
+                    // Busca o produto pelo nome
+                    $produtoData = Produto::where('name', $produto['name'])->first();
+
+                    if ($produtoData) {
+                        // Obtém o ID do produto e a quantidade vendida
+                        $produtoId = $produtoData->id;
+                        $quantidade = $produto['quantidade'] ?? 1; // Assume 1 se não especificado
+
+                        // Adiciona a quantidade vendida ao total do produto
+                        if (isset($produtoVendas[$produtoId])) {
+                            $produtoVendas[$produtoId]++;
+                        } else {
+                            $produtoVendas[$produtoId]=1;
+                        }
+                    }
+                }
+            }
+        }
+
+        // Retorna a lista de produtos com a quantidade total de vendas em formato JSON
         return response()->json([
             'status' => true,
-            'produtos' => $produtos->map(function ($produto) use ($compraCounts) {
-                $compraCount = $compraCounts->get($produto->id);
+            'produtos' => $produtos->map(function ($produto) use ($produtoVendas) {
+                $totalVendas = $produtoVendas[$produto->id] ?? 0;
                 return [
                     'id' => $produto->id,
                     'name' => $produto->name,
                     'marca' => $produto->marca ? $produto->marca->nome : null,
-                    'marca_id' => $produto->marca->id,
+                    'marca_id' => $produto->marca ? $produto->marca->id : null,
                     'quantidade' => $produto->quantidade,
-                    'segmento' => $produto->marca->segmento,
+                    'segmento' => $produto->marca ? $produto->marca->segmento : null,
                     'preco' => $produto->preco,
                     'status' => $produto->status,
                     'created_at' => $produto->created_at,
-                    'total_compras' => $compraCount ? $compraCount->total_compras : 0, // Adiciona a quantidade total de compras
+                    'total_vendas' => $totalVendas, // Adiciona a quantidade total de vendas
                 ];
             }),
         ], 200);
     }
+
 
     // Método para excluir um produto
     public function destroy(AuthRequest $request, $id)
@@ -116,27 +145,35 @@ class ProdutosController extends Controller
     {
         DB::beginTransaction();  // Inicia a transação
         try {
-            // Obtém o ID da marca baseado no nome ou usa o ID diretamente
-            $marcaID = isset($request->marcaName)
-                ? Marcas::where('nome', $request->marcaName)->pluck('id')->first()
-                : $request->marcaID;
+            if (isset($request->produtoID)) {
+
+                $produto = Produto::findOrFail($request->produtoID);
+                $produto->quantidade = $produto->quantidade + $request->quantidade;
+                $produto->preco = $request->valor;
+
+            } else {
+                $marcaID = isset($request->marcaName)
+                    ? Marcas::where('nome', $request->marcaName)->pluck('id')->first()
+                    : $request->marcaID;
 
 
 
-            $produto = Produto::create([
-                'name' => $request->name,
-                'marca_id' => $marcaID,  // Chave estrangeira para a tabela de marcas
-                'quantidade' => $request->quantidade,
-                'preco' => $request->valor,
-                'status' => 'Ativo'  // Define o status inicial como "Ativo"
-            ]);
-            $total =
-                $compra = Compra::create([
-                    'produto_id' => $produto->id,
-                    'total' => $request->preco * $request->quantidade,
-                    'valor' => $request->preco,
-                    'quantidade' => $request->quantidade
+                $produto = Produto::create([
+                    'name' => $request->name,
+                    'marca_id' => $marcaID,  // Chave estrangeira para a tabela de marcas
+                    'quantidade' => $request->quantidade,
+                    'preco' => $request->valor,
+                    'status' => 'Ativo'  // Define o status inicial como "Ativo"
                 ]);
+            }
+            $produto->save();
+
+            Compra::create([
+                'produto_id' => $produto->id,
+                'total' => $request->preco * $request->quantidade,
+                'valor' => $request->preco,
+                'quantidade' => $request->quantidade
+            ]);
             DB::commit();  // Comita a transação
 
             // Retorna o produto criado com uma mensagem de sucesso

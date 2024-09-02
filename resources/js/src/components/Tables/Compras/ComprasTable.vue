@@ -66,6 +66,7 @@
         </div>
     </div>
 </template>
+
 <script>
 import IconArrowDown from '../../Svg/IconArrowDown.vue';
 
@@ -98,10 +99,11 @@ export default {
                 const valueB = getValue(b, this.sortColumn);
 
                 if (typeof valueA === 'string' && typeof valueB === 'string') {
-                    return modifier * valueA.localeCompare(valueB);
+                    return modifier * valueA.localeCompare(valueB, undefined, { numeric: true });
                 } else if (typeof valueA === 'number' && typeof valueB === 'number') {
                     return modifier * (valueA - valueB);
                 } else {
+                    // Para lidar com casos onde os tipos de dados podem ser diferentes
                     return modifier * (valueA < valueB ? -1 : 1);
                 }
             });
@@ -119,8 +121,6 @@ export default {
     }
 };
 </script>
-
-
 
 <style scoped>
 /* Ensure no horizontal scrolling */

@@ -1,89 +1,87 @@
 <template>
-    <div class="flex flex-col gap-2 w-full justify-center items-center">
-        <div class="flex justify-center gap-2">
-            <input v-model="nome" @input="validateName('nome')" maxlength="25"
-                class="pl-2 mt-6 h-10 w-[28%] py-2 bg-transparent placeholder:text-slate-400 text-slate-700 text-sm border border-slate-200 rounded transition duration-300 ease focus:outline-none focus:border-slate-400 hover:border-slate-400 shadow-sm focus:shadow-md"
-                placeholder="Digite o Nome" />
-                <div class="text-center">
-                    <h1>Status</h1>
-                    <select v-model="status"
-                        class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block p-2.5">
-                        <option value="Suspenso">Suspenso</option>
-                        <option value="Ativo">Ativo</option>
-                        <option value="all">Todas as Opções</option>
-    
-                    </select>
+    <AccorDion title="Filtros Disponíveis">
+        <div class="flex flex-col gap-2 w-full justify-center items-center mt-2">
+            <div class="flex flex-col justify-center gap-2">
+                <div>
+                    <h1 class="text-xs font-bold mb-2">Data de Inserção</h1>
+                    <div class="flex gap-2">
+                        <InputAge v-model="dataMinima" small @input="applyFilter" placeholder="Data Mínima" />
+                        <InputAge v-model="dataMaxima" small @input="applyFilter" placeholder="Data Máxima" />
+                    </div>
                 </div>
-        </div>
-
-        <div class="flex gap-2 text-center text-xs">
-            <div>
-                <h1>Data Minima</h1>
-                <input v-model="dataMinima" type="date"
-                class="pr-3 h-10 pl-3 py-2 bg-transparent placeholder:text-slate-400 text-slate-700 text-sm border border-slate-200 rounded transition duration-300 ease focus:outline-none focus:border-slate-400 hover:border-slate-400 shadow-sm focus:shadow-md" />
+                <div>
+                    <h1 class="text-xs font-bold mb-2">Quantidade de Marcas</h1>
+                    <div class="flex gap-2">
+                        <InputName v-model="quantidadeMinima" @input="applyFilter" small placeholder="Quantidade Mínima" />
+                        <InputName v-model="quantidadeMaxima" @input="applyFilter" small placeholder="Quantidade Máxima" />     
+                    </div>
+                </div>
+                <div class="flex gap-2">
+                    <InputName v-model="nomeFornecedor" @input="applyFilter" small placeholder="Nome do Fornecedor" />
+                    <InputName v-model="nomeMarca" @input="applyFilter" small placeholder="Nome da Marca" />                    
+                </div>
+                <div class="flex justify-center">
+                    <InputName v-model="segmento" @input="applyFilter" small placeholder="Segmento da Marca" />                   
+                </div>
+                <div class="flex justify-center items-center gap-2">
+                    <div class="text-center">
+                        <h1 class="text-xs">Selecione o Status</h1>
+                        <div class="flex gap-3 items-center mobile">
+                            <label class="flex">
+                                <input type="radio" :value="'Suspenso'" v-model="status"
+                                    class="form-radio text-blue-600" @change="applyFilter">
+                                <span class="ml-2 text-gray-900">Suspenso</span>
+                            </label>
+                            <label class="flex">
+                                <input type="radio" :value="'Ativo'" v-model="status" class="form-radio text-blue-600"
+                                    @change="applyFilter">
+                                <span class="ml-2 text-gray-900">Ativo</span>
+                            </label>
+                            <label class="flex">
+                                <input type="radio" :value="'all'" v-model="status" class="form-radio text-blue-600"
+                                    @change="applyFilter">
+                                <span class="ml-2 text-gray-900">Todas as Opções</span>
+                            </label>
+                        </div>
+                    </div>
+                </div>
             </div>
-           <div>
-            <div> Data Maxima</div>
-            <input v-model="dataMaxima" type="date"
-            class="pr-3 h-10 pl-3 py-2 bg-transparent placeholder:text-slate-400 text-slate-700 text-sm border border-slate-200 rounded transition duration-300 ease focus:outline-none focus:border-slate-400 hover:border-slate-400 shadow-sm focus:shadow-md" />
-           </div>
-           
         </div>
-        <div class="flex">
-            <button type="button" @click="this.$emit('openModalFornecedor')"
-                class="focus:outline-none text-white bg-green-700 hover:bg-green-800 focus:ring-4 focus:ring-green-300 font-medium rounded-lg text-sm px-3 py-2.5 me-2 dark:bg-green-600 dark:hover:bg-green-700 dark:focus:ring-green-800">Adicionar
-                Fornecedor</button>
-            <button type="button" :disabled="!isFormValid" @click="applyFilter"
-                class="text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center inline-flex items-center dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800">Aplicar
-                Filtro <svg class="rtl:rotate-180 w-3.5 h-3.5 ms-2" aria-hidden="true"
-                    xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 14 10">
-                    <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                        d="M1 5h12m0 0L9 1m4 4L9 9" />
-                </svg>
-            </button>
-        </div>
-
-    </div>
+    </AccorDion>
 </template>
 
 <script>
+import AccorDion from '../Accordion/AccorDion.vue';
+import InputName from '../Inputs/InputName.vue';
+import InputAge from '../Inputs/InputAge.vue';
+
 export default {
     name: "FornecedorFilter",
+    components: { AccorDion, InputName, InputAge },
     data() {
         return {
-            nome: '',
-            produto: '',
+            nomeFornecedor: '',
+            nomeMarca: '',
             status: 'all',
-            ordenar: 'all',
+            segmento: '',
+            quantidadeMinima: '',
+            quantidadeMaxima: '',
             dataMinima: '',
             dataMaxima: '',
         };
     },
-    computed: {
-        isFormValid() {
-            return this.nome.trim() !== '' ||
-                this.produto.trim() !== '' ||
-                this.status !== 'all' ||
-                this.ordenar !== 'all' ||
-                this.dataMinima !== '' ||
-                this.dataMaxima !== '';
-        }
-    },
     methods: {
-        validateName(field) {
-            this[field] = this[field].replace(/\d/g, '');
-            this.validateLength(field);
-        },
-        validateLength(field) {
-            if (this[field].length > 25) this[field] = this[field].slice(0, 25);
-        },
         applyFilter() {
-            const filter = {}
-            if (this.nome.trim()) filter.nome = this.nome.trim()
-            if (this.status !== 'all') filter.status = this.status
-            if (this.dataMinima) filter.dataMinima = this.dataMinima
-            if (this.dataMaxima) filter.dataMaxima = this.dataMaxima
-            this.$emit('applyFilter', filter)
+            const filter = {};
+            if (this.nomeFornecedor.trim()) filter.nomeFornecedor = this.nomeFornecedor.trim();
+            if (this.nomeMarca.trim()) filter.nomeMarca = this.nomeMarca.trim();
+            if (this.status !== 'all') filter.status = this.status;
+            if (this.segmento.trim()) filter.segmento = this.segmento.trim();
+            if (this.quantidadeMinima) filter.quantidadeMinima = this.quantidadeMinima;
+            if (this.quantidadeMaxima) filter.quantidadeMaxima = this.quantidadeMaxima;
+            if (this.dataMinima) filter.dataMinima = this.dataMinima;
+            if (this.dataMaxima) filter.dataMaxima = this.dataMaxima;
+            this.$emit('applyFilter', filter);
         }
     }
 };

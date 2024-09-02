@@ -5,7 +5,7 @@
             <div class="relative bg-white rounded-lg shadow">
                 <div class="flex items-center justify-between p-4 border-b rounded-t">
                     <h3 class="text-xl font-semibold text-gray-900">
-                        Adicionar Produto
+                        Adicionar Compra
                     </h3>
                     <button @click="$emit('close')"
                         class="text-gray-400 bg-transparent hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm w-8 h-8 inline-flex justify-center items-center"
@@ -19,10 +19,13 @@
                     </button>
                 </div>
                 <div class="p-4 flex flex-col items-center gap-2">
-                    <InputName v-model="name" placeholder="Digite o Nome" />
+                    <InputName v-model="name" @input="filterProducts" placeholder="Digite o Nome" />
+                    <ComprasProdutos :body="filteredProducts" @productSelected="productSelected" />
                     <InputNumber v-model="quantidade" placeholder="Digite a Quantidade" />
-                    <InputSalario v-model="preco" placeholder="Digite o Valor de Custo" />
-                    <InputSalario v-model="valor" placeholder="Digite o Preço" />
+                    <div v-if="!disabled" class="flex flex-col gap-2">
+                        <InputSalario v-model="preco" placeholder="Digite o Valor de Custo" />
+                        <InputSalario v-model="valor" placeholder="Digite o Preço" />
+                    </div>
 
                     <!-- Mensagem de erro se o valor de custo for maior ou igual ao preço -->
                     <div v-if="preco && valor && parseFloat(preco.replace(/^R\$\s?/, '').replace(',', '.').trim()) >= parseFloat(valor.replace(/^R\$\s?/, '').replace(',', '.').trim())"
@@ -32,7 +35,7 @@
                     <label class="block text-sm font-medium text-gray-900">Selecione a Marca</label>
 
                     <div v-if="marcas.length > 0">
-                        <select
+                        <select :disabled="disabled"
                             class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block p-2.5"
                             v-model="marcaID">
                             <option value="" disabled selected>Selecione uma marca</option>
@@ -50,11 +53,10 @@
                         </router-link>
                     </div>
 
-
                     <!-- Adiciona a condição para mostrar o botão somente se houver marcas e a validação for bem-sucedida -->
                     <button v-if="marcas.length > 0" :disabled="isFormValid && isPrecoInvalido" @click="submitForm"
                         class="w-full text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center">
-                        Criar Produto
+                        Fazer Compra
                     </button>
                 </div>
             </div>
@@ -62,14 +64,20 @@
     </div>
 </template>
 <script>
-import http from "./../../../../src/services/http.js"
-import InputName from "./../../../../src/components/Inputs/InputName.vue"
-import InputNumber from "./../../../../src/components/Inputs/InputNumber.vue"
+import http from "./../../../../src/services/http.js";
+import InputName from "./../../../../src/components/Inputs/InputName.vue";
+import InputNumber from "./../../../../src/components/Inputs/InputNumber.vue";
 import InputSalario from "../../Inputs/InputSalario.vue";
+import ComprasProdutos from "../../Tables/Compras/ComprasProdutos.vue";
 
 export default {
     name: "ProdutosModal",
-    components: { InputName, InputNumber, InputSalario },
+    components: { InputName, InputNumber, InputSalario, ComprasProdutos },
+    props: {
+        allCompras: {
+            type: Array
+        }
+    },
     data() {
         return {
             marcas: [],
@@ -78,16 +86,19 @@ export default {
             valor: '',
             preco: '',
             quantidade: '',
-            marcaID: ''
+            marcaID: '',
+            produtos: [],
+            produto_id: null,
+            filteredProducts: [],
+            choosedProduct: {},
+            disabled: false
         };
     },
     computed: {
         isFormValid() {
-            // Verifica se todos os campos necessários estão preenchidos e se a marcaID está selecionada
             return this.name.trim() && this.quantidade && this.preco.trim() && this.valor.trim() && this.marcaID;
         },
         isPrecoInvalido() {
-            // Verifica se o valor de custo é maior ou igual ao preço
             if (!this.preco || !this.valor) return false;
             const precoFloat = parseFloat(this.preco.replace(/^R\$\s?/, '').replace(',', '.').trim());
             const valorFloat = parseFloat(this.valor.replace(/^R\$\s?/, '').replace(',', '.').trim());
@@ -97,29 +108,97 @@ export default {
     methods: {
         async getMarcas() {
             try {
-                const data = await http.post('/filter-marca', { "status": "Ativo" });
+                const data = await http.post('/filter-marca', { status: "Ativo" });
                 this.marcas = data.data.marcas.map(marca => ({
                     name: marca.nome,
                     id: marca.id
                 }));
             } catch (error) {
-                console.log(error);
+                console.error(error);
+            }
+        },
+        async getProdutos() {
+            try {
+                const data = await http.get('/produtos');
+                this.produtos = data.data.produtos;
+            } catch (error) {
+                console.error(error);
+            }
+        },
+        filterProducts() {
+            const searchTerm = this.name.trim().toLowerCase();
+            if (searchTerm) {
+                this.filteredProducts = this.produtos.filter(produto =>
+                    produto.name.toLowerCase().includes(searchTerm)
+                );
+            } else {
+                this.filteredProducts = [];
+            }
+
+            // Limpar campos se nenhum produto for encontrado
+            if (this.filteredProducts.length === 0) {
+                this.preco = '';
+                this.valor = '';
+                this.choosedProduct = null;
+                this.disabled = false;
+            } else if (this.filteredProducts.length === 1) {
+                this.productSelected(this.filteredProducts[0]);
+            }
+        },
+        async filterProductsByMarca() {
+            const searchTerm = this.name.trim().toLowerCase();
+            if (searchTerm) {
+                const filtered = this.produtos.filter(produto =>
+                    produto.name.toLowerCase().includes(searchTerm) &&
+                    (!this.marcaID || produto.marca_id === this.marcaID)
+                );
+                this.filteredProducts = filtered;
+            } else {
+                this.filteredProducts = [];
+            }
+
+            if (this.filteredProducts.length === 0 && this.name === '') 
+            {
+                this.preco = '';
+                this.valor = '';
+                this.choosedProduct = null;
+                this.disabled = false;
+            } else if (this.filteredProducts.length === 1) {
+                this.productSelected(this.filteredProducts[0]);
+            }
+        },
+        productSelected(product) {
+            const produto = this.allCompras.find(produto => produto.produto_id === product.id);
+            if (produto) {
+                this.marcaID = produto.produto.marca_id;
+                this.preco = produto.valor;
+                this.valor = produto.produto.preco;
+                this.produto_id = produto.produto_id;
+                this.choosedProduct = produto;
+                this.disabled = true;
             }
         },
         submitForm() {
-            this.$emit('addProduto', {
-                name: this.name,
-                marca: this.marca,
+            const body = {
                 preco: this.preco.replace(/^R\$\s?/, '').replace(',', '.').trim(),
-                valor:this.valor.replace(/^R\$\s?/, '').replace(',', '.').trim(),
+                valor: this.valor.replace(/^R\$\s?/, '').replace(',', '.').trim(),
+                name: this.name,
+                marcaID: this.marcaID,
                 quantidade: this.quantidade,
-                marcaID: this.marcaID
-            });
+                ...(this.choosedProduct ? { produtoID: this.produto_id } : {})
+            };
+
+
+            this.$emit('addProduto', body);
             this.$emit('close');
         }
     },
+    watch: {
+        marcaID: 'filterProductsByMarca'
+    },
     created() {
         this.getMarcas();
+        this.getProdutos();
     }
 };
 </script>

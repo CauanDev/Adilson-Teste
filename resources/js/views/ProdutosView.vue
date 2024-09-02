@@ -87,7 +87,7 @@ export default {
                     marca: produto.marca,
                     preco: produto.preco,
                     quantidade: produto.quantidade,
-                    totalCompras:produto.total_compras,
+                    totalCompras:produto.total_vendas,
                     segmento: produto.segmento,
                     marcaID: produto.marca_id,
                     created_at: format(new Date(produto.created_at), 'dd/MM/yyyy'),

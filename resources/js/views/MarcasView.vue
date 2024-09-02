@@ -1,8 +1,13 @@
 <template>
     <LoadingCircle v-if="loading" />
     <TitleView title="Marcas" />
-    <MarcasFilter @applyFilter="applyFilter" @openModalMarca="openModalMarca" />
-
+    <MarcasFilter @applyFilter="applyFilter" />
+    <div class="flex justify-center w-full">
+        <button type="button" @click="() => this.addMarcaModal = true"
+            class="focus:outline-none text-white bg-green-700 hover:bg-green-800 focus:ring-4 focus:ring-green-300 font-medium rounded-lg text-sm px-3 py-2.5 me-2 dark:bg-green-600 dark:hover:bg-green-700 dark:focus:ring-green-800">
+            Adicionar Marca
+        </button>
+    </div>
     <MarcaModalUpdate v-if="openModalUpdate" @updateMarca="updateMarca" @close="close" :marca="marca" />
 
     <WrongWarning v-if="wrongWarning" :title="warning" @close="close" />
@@ -70,163 +75,103 @@ export default {
                 };
             });
         },
-        openModalMarca() {
-            console.log('ok')
-            this.addMarcaModal = true;
-        },
-        convertToDisplayDate(dateStr) {
-            if (!dateStr) return null;
-
-            const [year, month, day] = dateStr.split('-').map(Number);
-
-            // Valida se os valores extraídos são válidos
-            if (isNaN(day) || isNaN(month) || isNaN(year) ||
-                day < 1 || day > 31 || month < 1 || month > 12 || year < 1900) {
-                console.error('Data inválida:', dateStr);
-                return null;
+        formatDate(dateString) {
+            // Verifica se a string tem 8 caracteres
+            if (dateString.length !== 8) {
+                throw new Error("A string deve ter 8 caracteres no formato 'ddmmyyyy'.");
             }
 
-            // Cria a data e verifica se é válida
-            const date = new Date(year, month - 1, day);
-            if (isNaN(date.getTime())) {
-                console.error('Data inválida:', dateStr);
-                return null;
-            }
+            // Extrair o dia, mês e ano da string
+            let day = dateString.substring(0, 2);
+            let month = dateString.substring(2, 4);
+            let year = dateString.substring(4, 8);
 
-            // Retorna a data no formato 'dd/MM/yyyy'
-            return `${String(day).padStart(2, '0')}/${String(month).padStart(2, '0')}/${year}`;
+            // Retorna a data formatada
+            return `${day}-${month}-${year}`;
         },
         applyFilter(filter) {
-            
-            // Desestruturando o filtro para fácil acesso
-            const { nameFornecedor, nameMarca, status, dataMinima, dataMaxima } = filter;
-            // Filtrando os dados com base no filtro
-            let filteredMarcas = this.allMarcas;
+            this.loading = true;
 
-            // Filtrando pelo nome da marca
-            if (nameMarca) {
-                filteredMarcas = filteredMarcas.filter(marca =>
-                    marca.nome.toLowerCase().includes(nameMarca.toLowerCase())
-                );
-            }
-            
-            console.log(this.fornecedorID)
-            // Filtrando pelo nome do fornecedor
-            if (nameFornecedor) {
-                filteredMarcas = filteredMarcas.filter(marca =>
-                    marca.fornecedor_nome.toLowerCase().includes(nameFornecedor.toLowerCase())
-                );
-            }
+            // Aplicar filtro no array allMarcas
+            const filteredMarcas = this.allMarcas.filter(marca => {
+                let isValid = true;
 
-            // Filtrando pelo status
-            if (status && status !== 'all') {
-                filteredMarcas = filteredMarcas.filter(marca =>
-                    marca.status === status
-                );
-            }
-            const dataMinimaDisplay = dataMinima ? this.convertToDisplayDate(dataMinima) : null;
-            const dataMaximaDisplay = dataMaxima ? this.convertToDisplayDate(dataMaxima) : null;
-            // Filtrando pela data mínima
-            if (dataMinimaDisplay) {
-                filteredMarcas = filteredMarcas.filter(marca => new Date((format(new Date(marca.created_at), 'dd/MM/yyyy'))) >= dataMinimaDisplay
-                );
-            }
-            // Filtrando pela data máxima
-            if (dataMaximaDisplay) {
-                filteredMarcas = filteredMarcas.filter(marca =>
-                    (format(new Date(marca.created_at), 'dd/MM/yyyy')) <= dataMaximaDisplay
-                );
-            }
+                // Filtrar pelo nome da marca
+                if (filter.nameMarca) {
+                    const nameMarca = marca.nome.toLowerCase();
+                    const nameMarcaFilter = filter.nameMarca.toLowerCase();
+                    if (!nameMarca.includes(nameMarcaFilter)) isValid = false;
+                }
 
-            if (filteredMarcas.length <= 0) {
-                this.wrongWarning = true;
-                this.warning = "Consulta Retornou Zero";
-            } else {
-                this.sucessWarning = true;
-                this.mapMarcas(filteredMarcas);
-                this.warning = `${filteredMarcas.length} Linhas Retornadas `;
-            }
+                // Filtrar pelo nome do fornecedor
+                if (filter.nameFornecedor) {
+                    const nameFornecedor = marca.fornecedor_nome.toLowerCase();
+                    const nameFornecedorFilter = filter.nameFornecedor.toLowerCase();
+                    if (!nameFornecedor.includes(nameFornecedorFilter)) isValid = false;
+                }
 
+                // Filtrar pelo status
+                if (filter.status && filter.status !== 'all') {
+                    if (marca.status !== filter.status) isValid = false;
+                }
+
+                // Verificar data mínima
+                if (filter.dataMinima) {
+                    const dataMinima = this.formatDate(filter.dataMinima);
+                    const createdAt = format(new Date(marca.created_at), 'dd-MM-yyyy')
+                    if (createdAt >= dataMinima) isValid = false;
+                }
+
+                // Verificar data máxima
+                if (filter.dataMaxima) {
+                    const dataMaxima = this.formatDate(filter.dataMaxima);
+                    const createdAt = format(new Date(marca.created_at), 'dd-MM-yyyy')
+                    if (createdAt <= dataMaxima) isValid = false;
+                }
+
+                // Filtrar pela quantidade mínima
+                if (filter.quantidadeMinima !== undefined) {
+                    console.log(marca.quantidade)
+                    if (marca.produtos.length < filter.quantidadeMinima) isValid = false;
+                }
+
+                // Filtrar pela quantidade máxima
+                if (filter.quantidadeMaxima !== undefined) {
+                    if (marca.produtos.length > filter.quantidadeMaxima) isValid = false;
+                }
+
+                // Filtrar pelo segmento
+                if (filter.segmento) {
+                    const segmento = marca.segmento.toLowerCase();
+                    const segmentoFilter = filter.segmento.toLowerCase();
+                    if (!segmento.includes(segmentoFilter)) isValid = false;
+                }
+
+                return isValid;
+            });
+
+            this.mapMarcas(filteredMarcas);
             this.loading = false;
         },
+
         async addMarca(marca) {
             this.loading = true;
             try {
-                // Converte a data para o formato aceito pelo backend
-                const convertDateFormat = (dateStr) => {
-                    if (!dateStr) return null;
-
-                    const [day, month, year] = dateStr.split('/').map(Number);
-
-                    // Valida se os valores extraídos são válidos
-                    if (isNaN(day) || isNaN(month) || isNaN(year) ||
-                        day < 1 || day > 31 || month < 1 || month > 12 || year < 1900) {
-                        console.error('Data inválida:', dateStr);
-                        return null;
-                    }
-
-                    // Cria a data e verifica se é válida
-                    const date = new Date(year, month - 1, day);
-                    if (isNaN(date.getTime())) {
-                        console.error('Data inválida:', dateStr);
-                        return null;
-                    }
-
-                    // Retorna a data no formato 'yyyy-MM-dd'
-                    return `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
-                };
-
-                // Converte a data para o formato 'yyyy-MM-dd'
-                marca.created_at = convertDateFormat(marca.created_at);
-
-                const data = await http.post('/store-marca', marca);
+                await http.post('/store-marca', marca);
+                this.getMarcas();
                 this.sucessWarning = true;
                 this.warning = "Marca Inserida";
-                this.getMarcas();
             } catch (error) {
                 console.log(error);
             }
             this.loading = false;
         },
-
         async updateMarca(newMarca) {
             this.loading = true;
             try {
-                // Converte a data para o formato aceito pelo backend
-                const convertDateFormat = (dateStr) => {
-                    if (!dateStr) return null;
 
-                    const [day, month, year] = dateStr.split('/').map(Number);
-
-                    // Valida se os valores extraídos são válidos
-                    if (isNaN(day) || isNaN(month) || isNaN(year) ||
-                        day < 1 || day > 31 || month < 1 || month > 12 || year < 1900) {
-                        console.error('Data inválida:', dateStr);
-                        return null;
-                    }
-
-                    // Cria a data e verifica se é válida
-                    const date = new Date(year, month - 1, day);
-                    if (isNaN(date.getTime())) {
-                        console.error('Data inválida:', dateStr);
-                        return null;
-                    }
-
-                    // Retorna a data no formato 'yyyy-MM-dd'
-                    return `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
-                };
-
-                // Converte a data para o formato 'yyyy-MM-dd'
-                newMarca.created_at = convertDateFormat(newMarca.created_at);
-
-                const { data } = await http.post('/update-marca', newMarca);
-                this.allMarcas = this.allMarcas.map(marca => {
-                    if (marca.id === data.id) {
-                        return { ...marca, ...data };
-                    }
-                    return marca;
-                });
-                this.mapMarcas(this.allMarcas);
+                await http.post('/update-marca', newMarca);
+                this.getMarcas();
                 this.sucessWarning = true;
                 this.warning = "Marca Atualizada";
             } catch (error) {

@@ -6,8 +6,14 @@
     <TitleView title="Funcionários" />
 
     <!-- Filtro de funcionários e modal para criação de novos funcionários -->
-    <FuncionarioFilter @applyFilter="applyFilter" @openModalFuncionario="openModalFuncionario" />
 
+    <FuncionarioFilter @applyFilter="applyFilter" />
+    <div class="flex justify-center">
+        <button type="button" @click="() => this.addFuncionarioModal = true"
+            class="focus:outline-none text-white bg-green-700 hover:bg-green-800 focus:ring-4 focus:ring-green-300 font-medium rounded-lg text-sm px-3 py-2.5 me-2 dark:bg-green-600 dark:hover:bg-green-700 dark:focus:ring-green-800">
+            Adicionar Funcionario
+        </button>
+    </div>
     <!-- Modal para atualização de funcionários -->
     <FuncionarioModalUpdate v-if="openModalUpdate" @updateFuncionario="updateFuncionario" @close="close"
         :funcionario="funcionario" />
@@ -68,7 +74,8 @@ export default {
             this.loading = true;
             try {
                 const data = await http.get('/funcionarios');
-                this.mapFuncionario(data.data.funcionarios);
+                this.allFuncionarios = data.data.funcionarios
+                this.mapFuncionarios(data.data.funcionarios);
             } catch (error) {
                 console.log(error);
             }
@@ -76,8 +83,8 @@ export default {
         },
 
         // Mapeia a lista de funcionários para o formato usado na tabela e armazena em `allFuncionarios`
-        mapFuncionario(array) {
-            this.allFuncionarios = array.map(funcionario => {
+        mapFuncionarios(array) {
+            this.funcionarios = array.map(funcionario => {
                 return {
                     id: funcionario.id,
                     name: funcionario.nome,
@@ -90,7 +97,6 @@ export default {
                     created_at: format(new Date(funcionario.created_at), 'dd/MM/yyyy'),
                 };
             });
-            this.funcionarios = this.allFuncionarios; // Inicialmente, `funcionarios` é igual a `allFuncionarios`
         },
         convertToDisplayDate(dateStr) {
             if (!dateStr) return null;
@@ -116,7 +122,8 @@ export default {
         },
         // Aplica o filtro para a lista de funcionários
         applyFilter(filter) {
-
+            this.loading = true;
+            // Função para calcular a idade
             const calculateAge = (dateOfBirth) => {
                 const today = new Date();
                 const birthDate = new Date(dateOfBirth);
@@ -128,50 +135,65 @@ export default {
                 return age;
             };
 
-            const filterFuncionarios = this.allFuncionarios.filter(funcionario => {
-                const matchesName = filter.name ? funcionario.name.includes(filter.name) : true;
-                const matchesStatus = filter.status ? funcionario.status === filter.status : true;
-                const matchesSexo = filter.sexo ? funcionario.sexo === filter.sexo : true;
+            // Aplicar filtro no array allFuncionarios
+            const filteredFuncionarios = this.allFuncionarios.filter(funcionario => {
+                let isValid = true;
 
+                // Filtrar pelo nome
+                if (filter.name) {
+                    const name = funcionario.nome.toLowerCase();
+                    const nameFilter = filter.name.toLowerCase();
+                    if (!name.includes(nameFilter)) isValid = false;
+                }
+
+                // Filtrar pelo status
+                if (filter.status) {
+                    if (funcionario.status !== filter.status) isValid = false;
+                }
+
+                // Filtrar pelo sexo
+                if (filter.sexo && filter.sexo !== 'all') {
+                    if (funcionario.sexo !== filter.sexo) isValid = false;
+                }
+
+                // Filtrar pela faixa de idade
                 const funcionarioAge = calculateAge(funcionario.data_nasc);
-                // Verifica faixa de idade
-                const matchesIdade = (
-                    (!filter.idadeMin || funcionarioAge >= filter.idadeMin) &&
-                    (!filter.idadeMax || funcionarioAge <= filter.idadeMax)
-                );
+                if ((filter.idadeMin && funcionarioAge < filter.idadeMin) ||
+                    (filter.idadeMax && funcionarioAge > filter.idadeMax)) {
+                    isValid = false;
+                }
 
-                // Verifica faixa de salário
-                const matchesSalario = (
-                    (!filter.salarioMinimo || funcionario.salario >= filter.salarioMinimo) &&
-                    (!filter.salarioMaximo || funcionario.salario <= filter.salarioMaximo)
-                );
+                // Filtrar pela faixa de salário
+                if ((filter.salarioMinimo && funcionario.salario < filter.salarioMinimo) ||
+                    (filter.salarioMaximo && funcionario.salario > filter.salarioMaximo)) {
+                    isValid = false;
+                }
+                if ((filter.quantidadeMin && funcionario.pedidos_count < filter.quantidadeMin) ||
+                    (filter.quantidadeMax && funcionario.pedidos_count > filter.quantidadeMax)) {
+                    isValid = false;
+                }
 
-                const dataMinimaDisplay = filter.dataMinima ? this.convertToDisplayDate(filter.dataMinima) : null;
-                const dataMaximaDisplay = filter.dataMaxima ? this.convertToDisplayDate(filter.dataMaxima) : null;
 
-                // Verifica as datas
-                const matchesDataMinima = dataMinimaDisplay ? funcionario.created_at >= dataMinimaDisplay : true;
-                const matchesDataMaxima = dataMaximaDisplay ? funcionario.created_at <= dataMaximaDisplay : true;
+                // Verificar data mínima
+                if (filter.dataMinima) {
+                    const dataMinima = this.formatDate(filter.dataMinima);
+                    const createdAt = format(new Date(funcionario.created_at), 'dd-MM-yyyy');
+                    if (createdAt < dataMinima) isValid = false;
+                }
 
-                // Verifica se todos os filtros coincidem
-                return matchesName && matchesStatus && matchesSexo && matchesIdade && matchesSalario && matchesDataMinima && matchesDataMaxima;
+                // Verificar data máxima
+                if (filter.dataMaxima) {
+                    const dataMaxima = this.formatDate(filter.dataMaxima);
+                    const createdAt = format(new Date(funcionario.created_at), 'dd-MM-yyyy');
+                    if (createdAt > dataMaxima) isValid = false;
+                }
+
+                return isValid;
             });
 
-
-            // Caso não tenha funcionários correspondentes, exibe aviso
-            if (!filterFuncionarios || filterFuncionarios.length === 0) {
-                this.wrongWarning = true;
-                this.warning = "Consulta Retornou Zero";
-            } else {
-                this.sucessWarning = true;
-                this.warning = `${filterFuncionarios.length} Linhas Retornadas`;
-                this.funcionarios = filterFuncionarios;
-            }
-        },
-
-        // Abre o modal para adicionar um novo funcionário
-        openModalFuncionario() {
-            this.addFuncionarioModal = true;
+            // Atualizar a lista filtrada e parar o carregamento
+            this.mapFuncionarios(filteredFuncionarios);
+            this.loading = false;
         },
 
         // Adiciona um novo funcionário e exibe aviso de sucesso
@@ -219,7 +241,7 @@ export default {
         // Atualiza um funcionário existente e exibe aviso de sucesso
         async updateFuncionario(newFuncionario) {
 
-            if (!/^\d{2}\/\d{2}\/\d{4}$/.test(newFuncionario.data_nasc))newFuncionario.data_nasc = format(new Date(newFuncionario.data_nasc.replace(/(\d{2})(\d{2})(\d{4})/, '$2/$1/$3')), 'dd/MM/yyyy');
+            if (!/^\d{2}\/\d{2}\/\d{4}$/.test(newFuncionario.data_nasc)) newFuncionario.data_nasc = format(new Date(newFuncionario.data_nasc.replace(/(\d{2})(\d{2})(\d{4})/, '$2/$1/$3')), 'dd/MM/yyyy');
             this.loading = true;
             try {
                 const { data } = await http.post('/update-funcionario', newFuncionario);

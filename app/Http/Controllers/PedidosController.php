@@ -279,10 +279,13 @@ class PedidosController extends Controller
             // Atualiza a quantidade dos produtos no estoque (retorna ao estoque)
             $produtos = json_decode($pedido->produtos, true);
             foreach ($produtos as $produto) {
-                $produtoModel = Produto::where('name', $produto['name'])->firstOrFail();
-                $produtoModel->quantidade += $produto['quantidade'];
-                $produtoModel->save();
+                $produtoModel = Produto::where('name', $produto['name'])->first();
+                if ($produtoModel) {
+                    $produtoModel->quantidade += $produto['quantidade'];
+                    $produtoModel->save();
+                }
             }
+            
 
             // Exclui o pedido
             $pedido->delete();

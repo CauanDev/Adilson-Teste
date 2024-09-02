@@ -13,7 +13,7 @@
                 peer-placeholder-shown:leading-[3.75] text-gray-500 peer-focus:text-gray-900 before:border-blue-gray-200 peer-focus:before:border-gray-900 after:border-blue-gray-200 peer-focus:after:border-gray-900">
                 {{ placeholder }}
             </label>
-            <p class="absolute right-[2px] top-1/2 transform -translate-y-1/2 text-blue-gray-700 text-xs px-2">
+            <p class="absolute right-2 top-1/2 transform -translate-y-1/2 text-blue-gray-700 text-xs px-2">
                 {{ remainingChars }}
             </p>
         </div>
@@ -22,61 +22,47 @@
 
 <script>
 export default {
-    name: 'InputName',
+    name: 'InputIdade',
     props: {
         placeholder: {
             type: String,
-            default: 'Username'
-        },
-        modelValue: {
-            type: String,
             default: ''
         },
-        small: {
+        modelValue: {
+            type: [String, Number],
+            default: ''
+        },
+        small:{
             type: Boolean,
             default: false
         }
     },
     data() {
         return {
-            inputValue: this.modelValue
+            inputValue: this.modelValue !== '' ? String(this.modelValue) : '' // Inicializa com modelValue
         };
     },
     computed: {
         remainingChars() {
-            return 25 - this.inputValue.length;
+            return 3 - this.inputValue.length;
         }
     },
     methods: {
         validateInput() {
-            // Permitir letras, espaços e até 3 dígitos
-            let digitCount = 0;
-            const cleanedInput = this.inputValue
-                .split('')
-                .filter(char => {
-                    if (/\d/.test(char)) {
-                        // Contar dígitos e permitir no máximo 3
-                        if (digitCount < 3) {
-                            digitCount++;
-                            return true;
-                        }
-                        return false;
-                    }
-                    return true; // Permitir letras e outros caracteres
-                })
-                .join('')
-                .slice(0, 25);  // Limitar o comprimento total a 25 caracteres
+            // Remove tudo que não for número e limita a 7 dígitos
+            this.inputValue = this.inputValue
+                .replace(/\D/g, '') // Remove caracteres não numéricos
+                .slice(0, 7); // Limita a 7 dígitos
 
-            this.inputValue = cleanedInput;
-
-            // Emit the updated value to the parent component
-            this.$emit('update:modelValue', this.inputValue);
-        }
+            // Emite o valor como número, ou uma string vazia se o valor estiver vazio
+            this.$emit('update:modelValue', this.inputValue ? Number(this.inputValue) : '');
+        },
     },
     watch: {
         modelValue(newValue) {
-            this.inputValue = newValue;
+            this.inputValue = newValue !== '' ? String(newValue) : ''; // Atualiza inputValue quando modelValue mudar
         }
-    }
+    },
+  
 };
 </script>
