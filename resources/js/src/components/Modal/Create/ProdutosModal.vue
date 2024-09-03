@@ -137,6 +137,8 @@ export default {
 
             // Limpar campos se nenhum produto for encontrado
             if (this.filteredProducts.length === 0) {
+                // alert("Vou apagar 1")
+
                 this.preco = '';
                 this.valor = '';
                 this.choosedProduct = null;
@@ -159,9 +161,9 @@ export default {
             console.log("array retornado: ")
             console.log(this.filteredProducts)
             if (this.filteredProducts.length === 0) {
-                
-                    this.preco = '';
-                    this.valor = '';
+                    // alert("Vou apagar")
+                    // this.preco = '';
+                    // this.valor = '';
                 
 
 

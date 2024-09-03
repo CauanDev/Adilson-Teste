@@ -6,9 +6,13 @@
     <TitleView title="Pedidos" />
 
     <!-- Filtro de pedidos e modal para criação de novos pedidos -->
-    <PedidosFilter @applyFilter="applyFilter" @openModalFuncionario="openModalFuncionario"
-        :segmentos="Array.from(segmentos)" />
-
+    <PedidosFilter @applyFilter="applyFilter" />
+    <div class="flex justify-center w-full">
+        <button type="button" @click="() => this.addFuncionarioModal = true"
+            class="focus:outline-none text-white bg-green-700 hover:bg-green-800 focus:ring-4 focus:ring-green-300 font-medium rounded-lg text-sm px-3 py-2.5 me-2 dark:bg-green-600 dark:hover:bg-green-700 dark:focus:ring-green-800">
+            Adicionar Pedido
+        </button>
+    </div>
     <!-- Modal para atualização de pedidos -->
     <PedidosModalUpdate v-if="openModalUpdate" @close="close" @updatePedido="updatePedido" :pedido="pedido" />
 
@@ -22,8 +26,8 @@
     <PedidosModal v-if="addFuncionarioModal" @close="close" @addPedido="addPedido" />
 
     <!-- Tabela para exibir a lista de pedidos -->
-    <PedidoTable class="overflow-auto max-h-[500px] my-2" :body="funcionarios" @delete="deletePedido"
-        @details="getDetails" @update="updatePedidoStatus" />
+    <PedidoTable class="overflow-auto max-h-[500px] my-2" :body="pedidos" @delete="deletePedido" @details="getDetails"
+        @update="updatePedidoStatus" />
 </template>
 
 <script>
@@ -52,7 +56,7 @@ export default {
     },
     data() {
         return {
-            funcionarios: [], // Lista de pedidos a ser exibida na tabela
+            pedidos: [], // Lista de pedidos a ser exibida na tabela
             pedido: {}, // Detalhes do pedido selecionado
             openModalUpdate: false, // Controle para exibir o modal de atualização de pedido
             loading: false, // Controle de estado de carregamento
@@ -61,7 +65,7 @@ export default {
             sucessWarning: false, // Controle para exibir aviso de sucesso
             warning: '', // Mensagem a ser exibida nos avisos
             segmentos: [],
-            teste: ''
+            allPedidos: []
         };
     },
     methods: {
@@ -70,8 +74,9 @@ export default {
             this.loading = true;
             try {
                 const data = await http.get('/pedidos');
+                this.allPedidos = data.data.pedidos
                 this.mapPedido(data.data.pedidos);
-
+                console.log(this.allPedidos)
                 const segmentosSet = new Set();
 
                 data.data.pedidos.forEach(item => {
@@ -91,52 +96,97 @@ export default {
 
         // Mapeia a lista de pedidos para o formato usado na tabela
         async mapPedido(array) {
-            this.funcionarios = await Promise.all(array.map(async funcionario => {
-                console.log()
-                // Fazer as requisições para obter detalhes do cliente e do funcionário
-                const [clienteResponse, funcionarioResponse] = await Promise.all([
-                    http.get(`/cliente/${funcionario.cliente_id}`),
-                    http.get(`/funcionario/${funcionario.funcionario_id}`)
-                ]);
-
+            this.pedidos = array.map((pedido) => {
                 return {
-                    id: funcionario.id,
-                    preco: funcionario.total,
-                    status: funcionario.status,
-                    produtos: funcionario.produtos.length, // Contagem de produtos no pedido
-                    tudo: funcionario, // Todos os dados do pedido
-                    created_at: format(new Date(funcionario.created_at), 'dd/MM/yyyy'),
-                    cliente_nome: clienteResponse.data.cliente[0].nome,
-                    funcionario_nome: funcionarioResponse.data.funcionario[0].nome
+                    id: pedido.id,
+                    preco: pedido.total,
+                    status: pedido.status,
+                    quantidade_produtos: pedido.produtos.length, // Contagem de produtos no pedido
+                    produtos: pedido.produtos, // Todos os dados do pedido
+                    created_at: format(new Date(pedido.created_at), 'dd/MM/yyyy'),
+                    cliente_nome: pedido.cliente_nome ? pedido.cliente_nome : "Cliente Apagado",
+                    funcionario_nome: pedido.funcionario_nome ? pedido.funcionario_nome : "Funcionário Apagado",
+                    cliente_id:pedido.cliente_id,
+                    funcionario_id:pedido.funcionario_id
                 };
-            }));
-
-
-
-
+            });
         },
-
-
-        // Abre o modal para adicionar um novo pedido
-        openModalFuncionario() {
-            this.addFuncionarioModal = true;
-        },
-
-        // Aplica o filtro para a lista de pedidos
-        async applyFilter(filter) {
-            this.loading = true;
-            try {
-                const {data} = await http.post('/filter-pedidos', filter);
-                console.log(data.pedidos)
-                if (data.pedidos.length <= 0) {
-                    this.wrongWarning = true; // Exibe aviso se nenhum pedido for encontrado
-                    this.warning = "Consulta Retornou Zero";
-                } else {
-                    this.mapPedido(data.pedidos); // Atualiza a lista de pedidos com o filtro aplicado
-                }
-            } catch (error) {
-                console.log(error);
+        formatDate(dateString) {
+            // Verifica se a string tem 8 caracteres
+            if (dateString.length !== 8) {
+                throw new Error("A string deve ter 8 caracteres no formato 'ddmmyyyy'.");
             }
+
+            // Extrair o dia, mês e ano da string
+            let day = dateString.substring(0, 2);
+            let month = dateString.substring(2, 4);
+            let year = dateString.substring(4, 8);
+
+            // Retorna a data formatada
+            return `${day}-${month}-${year}`;
+        },
+        // Aplica o filtro para a lista de pedidos
+        applyFilter(filter) {
+            this.loading = true;
+            const filteredProdutos = this.allPedidos.filter(pedido => {
+                let isValid = true
+
+                if (filter.nameCliente) {
+                    const nameCliente = pedido.cliente_nome.toLowerCase();
+                    const nameClientefilter = filter.nameCliente.toLowerCase();
+                    if (!nameCliente.includes(nameClientefilter)) isValid = false;
+                }
+
+                if (filter.nameFuncionario) {
+                    const nameFuncionario = pedido.funcionario_nome.toLowerCase();
+                    const nameFuncionariofilter = filter.nameFuncionario.toLowerCase();
+                    if (!nameFuncionario.includes(nameFuncionariofilter)) isValid = false;
+                }
+
+                // Verificar data mínima
+                if (filter.dataMinima) {
+                    const dataMinima = this.formatDate(filter.dataMinima);
+                    const createdAt = format(new Date(pedido.created_at), 'dd-MM-yyyy')
+                    if (createdAt >= dataMinima) isValid = false;
+                }
+
+                // Verificar data máxima
+                if (filter.dataMaxima) {
+                    const dataMaxima = this.formatDate(filter.dataMaxima);
+                    const createdAt = format(new Date(pedido.created_at), 'dd-MM-yyyy')
+                    if (createdAt <= dataMaxima) isValid = false;
+                }
+
+                if (filter.valorMax) if (pedido.total > filter.valorMax) isValid = false;
+
+
+                if (filter.valorMin) if (pedido.total < filter.valorMin) isValid = false;
+
+
+
+                if (filter.status && filter.status !== 'all') if (pedido.status !== filter.status) isValid = false;
+
+
+
+                if (filter.nomeProduto) {
+                    const produtoNomeFilter = filter.nomeProduto.toLowerCase();
+                    const hasProduto = pedido.produtos.some(produto =>
+                        produto.name.toLowerCase().includes(produtoNomeFilter)
+                    );
+                    if (!hasProduto) isValid = false;
+                }
+
+                if (filter.segmento) {
+                    const segmentoFilter = filter.segmento.toLowerCase();
+                    const hasSegmento = pedido.produtos.some(produto =>
+                        produto.segmento.toLowerCase().includes(segmentoFilter)
+                    );
+                    if (!hasSegmento) isValid = false;
+                }
+
+                return isValid
+            });
+            this.mapPedido(filteredProdutos)
             this.loading = false;
 
 
@@ -179,7 +229,7 @@ export default {
         // Exibe os detalhes do pedido em um modal de atualização
         getDetails(value) {
             this.openModalUpdate = true;
-            this.pedido = value.tudo;
+            this.pedido = value;
         },
 
         // Deleta um pedido e exibe aviso de sucesso

@@ -120,6 +120,20 @@ export default {
             // Retorna a data no formato 'dd/MM/yyyy'
             return `${String(day).padStart(2, '0')}/${String(month).padStart(2, '0')}/${year}`;
         },
+        formatDate(dateString) {
+            // Verifica se a string tem 8 caracteres
+            if (dateString.length !== 8) {
+                throw new Error("A string deve ter 8 caracteres no formato 'ddmmyyyy'.");
+            }
+
+            // Extrair o dia, mês e ano da string
+            let day = dateString.substring(0, 2);
+            let month = dateString.substring(2, 4);
+            let year = dateString.substring(4, 8);
+
+            // Retorna a data formatada
+            return `${day}-${month}-${year}`;
+        },
         // Aplica o filtro para a lista de funcionários
         applyFilter(filter) {
             this.loading = true;

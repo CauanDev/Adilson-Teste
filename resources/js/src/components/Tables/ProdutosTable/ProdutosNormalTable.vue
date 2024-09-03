@@ -54,7 +54,7 @@ export default {
     methods: {
         async getProdutos() {
             try {
-                const data = await http.get('/produtos');
+                const data = await http.post('/filter-produto',{"status":"Ativo"});
                 this.produtos = data.data.produtos;
             } catch (error) {
                 console.log(error);

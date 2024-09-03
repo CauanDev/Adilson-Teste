@@ -13,6 +13,7 @@
             Adicionar Cliente
         </button>
     </div>
+
     <!-- Modal para atualizar as informações do cliente, visível quando necessário -->
     <ClienteModalUpdate v-if="openModalUpdate" @updateCliente="updateCliente" @close="close" :cliente="cliente" />
 
@@ -29,7 +30,6 @@
     <ClienteTable class="overflow-auto max-h-[500px] my-2" :body="clientes" @delete="deleteCliente"
         @details="getDetails" @update="updateClienteStatus" />
 </template>
-
 <script>
 import TitleView from "../src/components/Title/TitleView.vue"
 import LoadingCircle from "../src/components/Loading/LoadingCircle.vue"
@@ -56,7 +56,8 @@ export default {
             addClienteModal: false, // Controle para mostrar/ocultar o modal de adição de cliente
             wrongWarning: false, // Controle para mostrar/ocultar aviso de erro
             sucessWarning: false, // Controle para mostrar/ocultar aviso de sucesso
-            warning: '' // Mensagem de aviso a ser exibida
+            warning: '', // Mensagem de aviso a ser exibida
+            allClientes:[]
         }
     },
     methods: {
@@ -66,6 +67,8 @@ export default {
             try {
                 const data = await http.get('/clientes')
                 this.mapCliente(data.data.clientes)
+                this.allClientes = data.data.clientes
+                console.log(this.allClientes)
             } catch (error) {
                 console.log(error)
             }
@@ -87,21 +90,61 @@ export default {
                 };
             })
         },
+        formatDate(dateString) {
+            // Verifica se a string tem 8 caracteres
+            if (dateString.length !== 8) {
+                throw new Error("A string deve ter 8 caracteres no formato 'ddmmyyyy'.");
+            }
+
+            // Extrair o dia, mês e ano da string
+            let day = dateString.substring(0, 2);
+            let month = dateString.substring(2, 4);
+            let year = dateString.substring(4, 8);
+
+            // Retorna a data formatada
+            return `${day}-${month}-${year}`;
+        },
 
         // Aplica o filtro fornecido e atualiza a lista de clientes
         async applyFilter(filter) {
             this.loading = true
-            try {
-                const data = await http.post('/filter-cliente', filter)
-                if (data.data.clientes.length <= 0) {
-                    this.wrongWarning = true
-                    this.warning = "Consulta Retornou Zero"
-                } else {
-                    this.mapCliente(data.data.clientes)
+            const filteresClientes = this.allClientes.filter(cliente=>{
+                let isValid = true;
+                if (filter.nome){
+                    const nomeFilter = filter.nome.toLowerCase();
+                    const nomeCliente = cliente.nome.toLowerCase()
+                    if(!nomeCliente.includes(nomeFilter))isValid = false
                 }
-            } catch (error) {
-                console.log(error)
-            }
+
+                if (filter.status && filter.status!=='all') if (cliente.status !== filter.status) isValid = false;
+                if (filter.sexo && filter.sexo !== 'all') if (cliente.sexo !== filter.sexo) isValid = false;
+                if (filter.tipo && filter.tipo !=='all') if (cliente.tipo !== filter.tipo) isValid = false;
+
+               
+                if ((filter.idadeMin && cliente.idade < filter.idadeMin) ||
+                    (filter.idadeMax && cliente.idade > filter.idadeMax)) {
+                    isValid = false;
+                }
+
+                if (filter.dataMinima) {
+                    const dataMinima = this.formatDate(filter.dataMinima);
+                    const createdAt = format(new Date(cliente.created_at), 'dd-MM-yyyy');
+                    if (createdAt < dataMinima) isValid = false;
+                }
+
+                if (filter.dataMaxima) {
+                    const dataMaxima = this.formatDate(filter.dataMaxima);
+                    const createdAt = format(new Date(cliente.created_at), 'dd-MM-yyyy');
+                    if (createdAt > dataMaxima) isValid = false;
+                }
+
+                if(filter.quantidadeMinima)if (cliente.pedidos.length < quantidadeMinima)isValid = false;
+                if(filter.quantidadeMaxima)if (cliente.pedidos.length > quantidadeMaxima)isValid = false;
+
+                return isValid;
+            })
+           
+            this.mapCliente(filteresClientes)
             this.loading = false
         },
 

@@ -34,7 +34,7 @@ class PedidosController extends Controller
         // Recupera todos os pedidos ordenados por ID em ordem decrescente
         $pedidos = Pedido::orderBy('id', 'DESC')->get();
 
-        // Processa cada pedido para adicionar o ID do produto e o segmento correspondente
+        // Processa cada pedido para adicionar o ID do produto, segmento, nome do cliente e nome do funcionário
         foreach ($pedidos as $pedido) {
             // Decodifica o JSON dos produtos
             $produtos = json_decode($pedido->produtos, true);
@@ -51,7 +51,6 @@ class PedidosController extends Controller
                     // Busca a marca associada ao produto
                     $marca = Marcas::find($produtoData->marca_id);
 
-
                     // Adiciona o segmento da marca
                     $produto['segmento'] = $marca->segmento;
 
@@ -61,16 +60,25 @@ class PedidosController extends Controller
                 }
             }
 
+            // Busca o nome do cliente associado ao pedido
+            $cliente = Cliente::find($pedido->cliente_id);
+            $pedido->cliente_nome = $cliente ? $cliente->nome : null;
+
+            // Busca o nome do funcionário associado ao pedido
+            $funcionario = Funcionario::find($pedido->funcionario_id);
+            $pedido->funcionario_nome = $funcionario ? $funcionario->nome : null;
+
             // Atualiza o campo produtos do pedido com os IDs e segmentos
             $pedido->produtos = $produtos;
         }
 
-        // Retorna a lista de pedidos com os IDs e segmentos dos produtos
+        // Retorna a lista de pedidos com os IDs, segmentos dos produtos, nomes do cliente e funcionário
         return response()->json([
             'status' => true,
             'pedidos' => $pedidos,
         ], 200);
     }
+
 
     // Método para criar um novo pedido
     public function store(AuthRequest $request)
@@ -285,7 +293,7 @@ class PedidosController extends Controller
                     $produtoModel->save();
                 }
             }
-            
+
 
             // Exclui o pedido
             $pedido->delete();

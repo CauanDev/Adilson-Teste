@@ -6,8 +6,15 @@
     <TitleView title="Produtos" />
 
     <!-- Filtro de produtos e modal para criação de novos produtos -->
-    <ProdutoFilter @applyFilter="applyFilter" @openModalProduto="openModalProduto" />
-
+    <ProdutoFilter @applyFilter="applyFilter" />
+    <div class="flex justify-center">
+        <router-link to="/compras">
+            <button type="button"
+                class="focus:outline-none text-white bg-green-700 hover:bg-green-800 focus:ring-4 focus:ring-green-300 font-medium rounded-lg text-sm px-3 py-2.5 me-2 dark:bg-green-600 dark:hover:bg-green-700 dark:focus:ring-green-800">
+                Adicionar Produto
+            </button>
+        </router-link>
+    </div>
     <!-- Modal para atualização de produtos -->
     <ProdutosModalUpdate v-if="openModalUpdate" @saveChanges="saveChanges" :produto="produto" @close="close" />
 
@@ -17,8 +24,6 @@
     <!-- Aviso de sucesso exibido quando uma ação é concluída com sucesso -->
     <SucessWarning v-if="sucessWarning" :title="warning" @close="close" />
 
-    <!-- Modal para adicionar novos produtos -->
-    <ProdutosModal v-if="produtosModal" @close="close" @addProduto="addProduto" />
 
     <!-- Tabela para exibir a lista de produtos -->
     <ProdutosTable class="overflow-auto max-h-[500px] my-2" :body="produtos" @delete="deleteProduto"
@@ -31,7 +36,6 @@ import LoadingCircle from "../src/components/Loading/LoadingCircle.vue";
 import ProdutosTable from "../src/components/Tables/ProdutosTable/ProdutosTable.vue";
 import FornecedorModal from "../src/components/Modal/Update/FornecedorModal.vue";
 import ProdutosModalUpdate from "../src/components/Modal/Update/ProdutosModal.vue";
-import ProdutosModal from "../src/components/Modal/Create/ProdutosModal.vue";
 import ProdutoFilter from "../src/components/Filter/ProdutoFilter.vue";
 import WrongWarning from "../src/components/Warnings/WrongWarning.vue";
 import SucessWarning from "../src/components/Warnings/SucessWarning.vue";
@@ -47,7 +51,6 @@ export default {
         ProdutosTable,
         FornecedorModal,
         LoadingCircle,
-        ProdutosModal,
         ProdutoFilter,
         ProdutosModalUpdate
     },
@@ -58,7 +61,6 @@ export default {
             openModalUpdate: false, // Controle para exibir o modal de atualização de produto
             modal: false, // Controle para um modal genérico
             loading: false, // Controle de estado de carregamento
-            produtosModal: false, // Controle para exibir o modal de adição de produto
             confirmationModal: false, // Controle para exibir um modal de confirmação
             wrongWarning: false, // Controle para exibir aviso de erro
             sucessWarning: false, // Controle para exibir aviso de sucesso
@@ -87,82 +89,71 @@ export default {
                     marca: produto.marca,
                     preco: produto.preco,
                     quantidade: produto.quantidade,
-                    totalCompras:produto.total_vendas,
+                    totalCompras: produto.total_vendas,
                     segmento: produto.segmento,
                     marcaID: produto.marca_id,
                     created_at: format(new Date(produto.created_at), 'dd/MM/yyyy'),
                     id: produto.id
                 };
             });
-            console.log(this.produtos);
         },
+        formatDate(dateString) {
+            // Verifica se a string tem 8 caracteres
+            if (dateString.length !== 8) {
+                throw new Error("A string deve ter 8 caracteres no formato 'ddmmyyyy'.");
+            }
 
-        openModalProduto() {
-            this.produtosModal = true;
+            // Extrair o dia, mês e ano da string
+            let day = dateString.substring(0, 2);
+            let month = dateString.substring(2, 4);
+            let year = dateString.substring(4, 8);
+
+            // Retorna a data formatada
+            return `${day}-${month}-${year}`;
         },
-
         applyFilter(filter) {
             this.loading = true;
 
             // Filtra a lista allProdutos com base no objeto filter
             const filteredProdutos = this.allProdutos.filter(produto => {
-                let matches = true;
+                let isValid = true;
 
-                if (filter.name && !produto.name.toLowerCase().includes(filter.name.toLowerCase())) {
-                    matches = false;
+                if (filter.name && !produto.name.toLowerCase().includes(filter.name.toLowerCase())) isValid = false;
+
+                if (filter.marca && !produto.marca.toLowerCase().includes(filter.marca.toLowerCase())) isValid = false;
+
+                if (filter.segmento && !produto.segmento.toLowerCase().includes(filter.segmento.toLowerCase())) isValid = false;
+
+
+                if (filter.status && produto.status != filter.status) isValid = false;
+
+                if (filter.valorMax) if (produto.preco > parseFloat(filter.valorMax.replace('R$', '').trim())) isValid = false;
+                if (filter.valorMin) if (produto.preco < parseFloat(filter.valorMin.replace('R$', '').trim())) isValid = false;
+
+                if (filter.pedidosMax) if (produto.total_vendas > filter.pedidosMax) isValid = false;
+                if (filter.pedidosMin) if (produto.total_vendas < filter.pedidosMin) isValid = false;
+
+                if (filter.quantidadeMax) if (produto.quantidade > filter.quantidadeMax) isValid = false;
+                if (filter.quantidadeMin) if (produto.quantidade < filter.quantidadeMin) isValid = false;
+
+                if (filter.dataMinima) {
+                    const dataMinima = this.formatDate(filter.dataMinima);
+                    const createdAt = format(new Date(produto.created_at), 'dd-MM-yyyy');
+                    if (createdAt < dataMinima) isValid = false;
                 }
 
-                if (filter.marca_id && produto.marca_id != filter.marca_id) {
-                    matches = false;
+                if (filter.dataMaxima) {
+                    const dataMaxima = this.formatDate(filter.dataMaxima);
+                    const createdAt = format(new Date(produto.created_at), 'dd-MM-yyyy');
+                    if (createdAt > dataMaxima) isValid = false;
                 }
-
-                if (filter.segmento && produto.segmento != filter.segmento) {
-                    matches = false;
-                }
-
-                if (filter.quantidadeMin && produto.quantidade < parseInt(filter.quantidadeMin)) {
-                    matches = false;
-                }
-
-                if (filter.quantidadeMax && produto.quantidade > parseInt(filter.quantidadeMax)) {
-                    matches = false;
-                }
-
-                if (filter.status && produto.status != filter.status) {
-                    matches = false;
-                }
-
-                return matches;
+                return isValid;
             });
 
 
-            // Atualiza a lista de produtos com os resultados filtrados
-            if (filteredProdutos.length <= 0) {
-                this.wrongWarning = true;
-                this.warning = "Consulta Retornou Zero";
-            } else {
-                this.sucessWarning = true;
-                this.warning = `${filteredProdutos.length} Linhas Retornadas`;
-                this.produtos = [...filteredProdutos];
-            }
-
+            this.mapProdutos(filteredProdutos)
             this.loading = false;
         },
-
-        async addProduto(produto) {
-            console.log(produto);
-            this.loading = true;
-            try {
-                await http.post('/store-produto', produto);
-                this.sucessWarning = true;
-                this.warning = "Produto Inserido";
-                this.getProdutos();
-            } catch (error) {
-                console.log(error);
-            }
-            this.loading = false;
-        },
-
         async saveChanges(newProduto) {
             newProduto.preco = newProduto.preco.replace('R$', '').replace(',', '.');
             this.loading = true;
