@@ -1,5 +1,5 @@
 <template>
-    <AccorDion title="Filtros Disponveis">
+    <AccorDion title="Filtros Disponíveis">
 
         <div class="flex flex-col gap-2 w-full justify-center items-center whitespace-nowrap">
             <div>

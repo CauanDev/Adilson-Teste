@@ -6,10 +6,15 @@
     <TitleView title="Clientes" />
 
     <!-- Componente de filtro para clientes -->
-    <ClientesFilter @applyFilter="applyFilter" @openModalCliente="openModalCliente" />
-
+    <ClientesFilter @applyFilter="applyFilter" />
+    <div class="flex items-center justify-center">
+        <button type="button" @click="() => { this.addClienteModal = true }"
+            class="focus:outline-none w-[160px] text-white bg-green-700 hover:bg-green-800 focus:ring-4 focus:ring-green-300 font-medium rounded-lg text-sm px-3 py-2 me-2 dark:bg-green-600 dark:hover:bg-green-700 dark:focus:ring-green-800">
+            Adicionar Cliente
+        </button>
+    </div>
     <!-- Modal para atualizar as informações do cliente, visível quando necessário -->
-    <ClienteModalUpdate v-if="openModalUpdate" @updateCliente="updateCliente" @close="close" :cliente="cliente"/>
+    <ClienteModalUpdate v-if="openModalUpdate" @updateCliente="updateCliente" @close="close" :cliente="cliente" />
 
     <!-- Aviso de erro, exibido quando ocorre um problema com a consulta -->
     <WrongWarning v-if="wrongWarning" :title="warning" @close="close" />
@@ -39,8 +44,8 @@ import { format } from 'date-fns';
 
 export default {
     name: 'ClienteView',
-    components: { 
-        ClienteModalUpdate, ClienteModal, ClienteTable, WrongWarning, SucessWarning, TitleView, LoadingCircle, ClientesFilter 
+    components: {
+        ClienteModalUpdate, ClienteModal, ClienteTable, WrongWarning, SucessWarning, TitleView, LoadingCircle, ClientesFilter
     },
     data() {
         return {
@@ -74,18 +79,13 @@ export default {
                     id: cliente.id,
                     name: cliente.nome,
                     status: cliente.status,
-                    idade:  format(new Date(cliente.data_nasc), 'dd/MM/yyyy'),
+                    idade: format(new Date(cliente.data_nasc), 'dd/MM/yyyy'),
                     sexo: cliente.sexo,
-                    tipo:cliente.tipo,
+                    tipo: cliente.tipo,
                     email: cliente.email,
                     created_at: format(new Date(cliente.created_at), 'dd/MM/yyyy'),
                 };
             })
-        },
-
-        // Abre o modal para adicionar um novo cliente
-        openModalCliente() {
-            this.addClienteModal = true
         },
 
         // Aplica o filtro fornecido e atualiza a lista de clientes
@@ -121,17 +121,17 @@ export default {
 
         // Atualiza as informações de um cliente existente
         async updateCliente(newCliente) {
-           if (!/^\d{2}\/\d{2}\/\d{4}$/.test(newCliente.idade))newCliente.idade = format(new Date(newCliente.idade.replace(/(\d{2})(\d{2})(\d{4})/, '$2/$1/$3')), 'dd/MM/yyyy');
-           
- 
-           this.loading = true
+            if (!/^\d{2}\/\d{2}\/\d{4}$/.test(newCliente.idade)) newCliente.idade = format(new Date(newCliente.idade.replace(/(\d{2})(\d{2})(\d{4})/, '$2/$1/$3')), 'dd/MM/yyyy');
+
+
+            this.loading = true
             try {
                 await http.post('/update-cliente', newCliente)
                 this.sucessWarning = true
                 this.warning = "Cliente Atualizado"
                 this.getClientes()
             } catch (error) {
-                console.log(error)    
+                console.log(error)
             }
             this.loading = false
         },

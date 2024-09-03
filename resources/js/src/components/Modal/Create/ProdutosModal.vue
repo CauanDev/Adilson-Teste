@@ -35,7 +35,7 @@
                     <label class="block text-sm font-medium text-gray-900">Selecione a Marca</label>
 
                     <div v-if="marcas.length > 0">
-                        <select :disabled="disabled"
+                        <select
                             class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block p-2.5"
                             v-model="marcaID">
                             <option value="" disabled selected>Selecione uma marca</option>
@@ -156,15 +156,21 @@ export default {
             } else {
                 this.filteredProducts = [];
             }
+            console.log("array retornado: ")
+            console.log(this.filteredProducts)
+            if (this.filteredProducts.length === 0) {
+                
+                    this.preco = '';
+                    this.valor = '';
+                
 
-            if (this.filteredProducts.length === 0 && this.name === '') 
-            {
-                this.preco = '';
-                this.valor = '';
+
                 this.choosedProduct = null;
                 this.disabled = false;
-            } else if (this.filteredProducts.length === 1) {
-                this.productSelected(this.filteredProducts[0]);
+            }
+            else {
+                this.disabled = true
+                this.productSelected(this.filteredProducts);
             }
         },
         productSelected(product) {
