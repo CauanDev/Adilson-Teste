@@ -158,13 +158,13 @@ export default {
             } else {
                 this.filteredProducts = [];
             }
-            console.log("array retornado: ")
-            console.log(this.filteredProducts)
             if (this.filteredProducts.length === 0) {
-                    // alert("Vou apagar")
-                    // this.preco = '';
-                    // this.valor = '';
-                
+                // alert("Vou apagar")
+
+                if (this.quantidade == '') {
+                    this.preco = '';
+                    this.valor = '';
+                }
 
 
                 this.choosedProduct = null;

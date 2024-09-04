@@ -21,7 +21,15 @@
 
                 <div class="p-4 flex flex-col items-center gap-2">
                     <div class="flex gap-2">
-                        <div class="text-center">
+                        <div v-if="clientes.length == 0" class="flex text-center justify-center items-center">
+                            <router-link to="/clientes">
+                                <p class="text-gray-500 text-xs">Nenhum Cliente Disponível</p>
+                                <button type="button"
+                                    class="text-white bg-green-700 hover:bg-green-800 focus:ring-4 focus:ring-green-300 font-medium rounded-lg text-sm px-5 py-2.5 me-2 mb-2 focus:outline-none">Criar
+                                    Cliente</button>
+                            </router-link>
+                        </div>
+                        <div class="text-center" v-else>
                             <h1 class="text-xs">Escolha o Cliente</h1>
                             <select v-model="selectedCliente"
                                 class="bg-gray-50 w-full border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block p-2.5"
@@ -31,7 +39,15 @@
                                 </option>
                             </select>
                         </div>
-                        <div class="text-center">
+                        <div v-if="funcionarios.length == 0">
+                            <router-link to="/funcionarios">
+                                <p class="text-gray-500 text-xs">Nenhum Funcionario Disponível</p>
+                                <button type="button"
+                                    class="text-white bg-green-700 hover:bg-green-800 focus:ring-4 focus:ring-green-300 font-medium rounded-lg text-sm px-5 py-2.5 me-2 mb-2 focus:outline-none">Criar
+                                    Funcionário</button>
+                            </router-link>
+                        </div>
+                        <div class="text-center" v-else>
                             <h1 class="text-xs">Escolher o Funcionario</h1>
                             <select v-model="selectedFuncionario"
                                 class="bg-gray-50 w-full border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block p-2.5">
@@ -42,18 +58,18 @@
                             </select>
                         </div>
                     </div>
-
-                    <ProdutosNormalTable :headers="['Produto','Valor', '']"
-                        @update:counters="handleCountersUpdate" />
+                    <ProdutosNormalTable :headers="['Produto', 'Valor', '']" @update:counters="handleCountersUpdate" />
 
                     <div class="flex gap-2 flex-col">
-                        <div v-if="isVipCliente" class="text-center">
+                        <div v-if="isVipCliente" class="text-center w-full">
                             <h1>Desconto Aplicado (10%)</h1>
-                            <InputSalario v-model="discountString" placeholder="Desconto" class="w-[35%]" :desativado="true" />
+                            <InputSalario v-model="discountString" placeholder="Desconto" small
+                                :desativado="true" />
                         </div>
-                        <div class="text-center">
+                        <div class="text-center w-full">
                             <h1>Valor Total</h1>
-                            <InputSalario v-model="totalString" placeholder="Valor Total" class="w-[35%]" :desativado="true" />
+                            <InputSalario v-model="totalString" placeholder="Valor Total"  small
+                                :desativado="true" />
                         </div>
                     </div>
                     <button @click="submitForm" :disabled="!isFormValid"
@@ -68,15 +84,17 @@
 
 <script>
 import ProdutosNormalTable from "../../Tables/ProdutosTable/ProdutosNormalTable.vue";
+import InputName from "../../Inputs/InputName.vue"
 import InputSalario from "../../Inputs/InputSalario.vue";
 import http from "../../../services/http.js";
 
 export default {
     name: "PedidosModal",
-    components: { ProdutosNormalTable, InputSalario },
+    components: { ProdutosNormalTable, InputSalario,InputName },
     data() {
         return {
             clientes: [],
+            nameProduto:'',
             funcionarios: [],
             counters: {
                 total: 0,

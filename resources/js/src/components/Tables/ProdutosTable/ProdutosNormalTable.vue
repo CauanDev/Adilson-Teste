@@ -1,6 +1,8 @@
 <template>
     <div class="flex justify-center max-h-[200px] overflow-y-auto w-full sm:w-[100%]">
-        <div class="w-full">
+        <div class="w-full flex flex-col items-center gap-2 mt-2">
+            <InputName small placeholder="Nome do Produto" @input="applyFilter" v-model="nameProduto" />
+
             <div class="relative">
                 <table class="w-full text-sm text-left rtl:text-right text-black">
                     <thead class="text-xs uppercase bg-gray-300 text-center text-black sticky top-0 z-10">
@@ -18,11 +20,14 @@
                                 {{ row.name }}
                             </td>
                             <td class="px-2 py-2">
-                                R${{ row.preco.replace('.',',') }}
-                            </td>                            
+                                R${{ row.preco.replace('.', ',') }}
+                            </td>
                             <td class="px-2 py-2">
-                                <ItemCounter :maxValue="row.quantidade"
-                                    @update:value="updateValue(row.name, row.preco, $event)" />
+                                <ItemCounter 
+                                    :maxValue="row.quantidade"
+                                    :value="getCounterValue(row.name)"
+                                    @update:value="updateValue(row.name, row.preco, $event)" 
+                                />
                             </td>
                         </tr>
                     </tbody>
@@ -35,10 +40,11 @@
 <script>
 import http from "../../../services/http.js";
 import ItemCounter from "../../Counter/ItemCounter.vue";
+import InputName from "../../Inputs/InputName.vue";
 
 export default {
     name: 'ProdutosNormalTable',
-    components: { ItemCounter },
+    components: { ItemCounter, InputName },
     props: {
         headers: {
             type: Array,
@@ -47,33 +53,56 @@ export default {
     },
     data() {
         return {
+            allProdutos: [],
+            nameProduto: '',
             produtos: [],
-            counters: [] // Mantenha um objeto de contadores vazio
+            counters: []
         };
     },
     methods: {
         async getProdutos() {
             try {
-                const data = await http.post('/filter-produto',{"status":"Ativo"});
+                const data = await http.post('/filter-produto', { "status": "Ativo" });
+                this.allProdutos = data.data.produtos;
                 this.produtos = data.data.produtos;
             } catch (error) {
                 console.log(error);
             }
         },
+        applyFilter() {
+            const filteredProdutos = this.allProdutos.filter(produto => {
+                let isValid = true;
+                if (this.nameProduto !== '') {
+                    if (!produto.name.toLowerCase().includes(this.nameProduto.toLowerCase())) isValid = false;
+                }
+                return isValid;
+            });
+            this.produtos = filteredProdutos;
+        },
         updateValue(name, preco, quantidade) {
-            // Calcule o total
-            const total = preco * quantidade;
-
-            // Verifique se o produto já existe no array de contadores
             const index = this.counters.findIndex(item => item.name === name);
+
             if (index !== -1) {
-                // Atualize o produto existente
-                this.counters[index] = { name, quantidade, total };
-            } else {
-                // Adicione um novo produto
-                this.counters.push({ name, quantidade, total });
+                if (quantidade > 0) {
+                    this.counters[index].quantidade = quantidade;
+                    this.counters[index].total = preco * quantidade;
+                } else {
+                    this.counters.splice(index, 1);
+                }
+            } else if (quantidade > 0) {
+                this.counters.push({ name, quantidade, total: preco * quantidade });
             }
-            // Emita o evento com o array atualizado
+
+            // Emitir o valor total atualizado
+            this.emitTotal();
+        },
+        getCounterValue(name) {
+            const counter = this.counters.find(counter => counter.name === name);
+            return counter ? counter.quantidade : 0;
+        },
+        emitTotal() {
+            const total = this.counters.reduce((sum, counter) => sum + counter.total, 0);
+            console.log(total)
             this.$emit('update:counters', this.counters);
         }
     },

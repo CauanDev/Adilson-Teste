@@ -50,11 +50,11 @@
                     <div class="flex gap-2 flex-col">
                         <div v-if="isVipCliente" class="text-center">
                             <h1>Desconto Aplicado</h1>
-                            <InputSalario v-model="discountString" placeholder="Desconto" class="w-[35%]" :desativado="true" />
+                            <InputSalario v-model="discountString" placeholder="Desconto" small :desativado="true" />
                         </div>
                         <div class="text-center">
                             <h1>Valor Total</h1>
-                            <InputSalario v-model="totalString" placeholder="Valor Total" class="w-[35%]" :desativado="true" />
+                            <InputSalario v-model="totalString" placeholder="Valor Total" small :desativado="true" />
                         </div>
                     </div>
                     <button @click="submitForm" :disabled="!isFormValid"

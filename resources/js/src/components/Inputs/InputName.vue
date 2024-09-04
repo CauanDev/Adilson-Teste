@@ -13,7 +13,7 @@
                 peer-placeholder-shown:leading-[3.75] text-gray-500 peer-focus:text-gray-900 before:border-blue-gray-200 peer-focus:before:border-gray-900 after:border-blue-gray-200 peer-focus:after:border-gray-900">
                 {{ placeholder }}
             </label>
-            <p class="absolute right-[2px] top-1/2 transform -translate-y-1/2 text-blue-gray-700 text-xs px-2">
+            <p class="absolute right-[2px] top-1/2 transform -translate-y-1/2 text-blue-gray-700 text-xs px-0.5">
                 {{ remainingChars }}
             </p>
         </div>

@@ -83,6 +83,7 @@ export default {
                 this.loading = true;
                 try {
                     const data = await http.post('/verify-email', { "email": this.inputValue });
+                    console.log(data.data)
                     if (data.data.state === "undeliverable") {
                         this.isValid = false;
                         this.isVerified = false;
