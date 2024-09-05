@@ -58,7 +58,7 @@
                             </select>
                         </div>
                     </div>
-                    <ProdutosNormalTable :headers="['Produto', 'Valor', '']" @update:counters="handleCountersUpdate" />
+                    <ProdutosNormalTable :headers="['Produto', 'Valor','Quantidade', '']" @update:counters="handleCountersUpdate" />
 
                     <div class="flex gap-2 flex-col">
                         <div v-if="isVipCliente" class="text-center w-full">

@@ -1,95 +1,73 @@
 <template>
-    <div>
-        <div class="flex items-center justify-center sm:ml-0 ml-4">
+    <div class="max-h-[250px] overflow-y-auto">
+        <div class="flex items-center justify-center sm:ml-0 ml-4  p-2">
             <table class="border-separate border-spacing-y-0.5 text-sm w-full max-w-sm mx-auto">
                 <thead class="hidden sm:table-header-group select-none">
                     <tr>
                         <th class="px-4 py-2 text-center">
                             <p class="flex items-center justify-center cursor-pointer" @click="sortTable('name')">
-                                <IconArrowDown v-if="sortColumn === 'name' && sortDirection === 'desc'" class="mr-2 rotate-180" />
+                                <IconArrowDown v-if="sortColumn === 'name' && sortDirection === 'desc'"
+                                    class="mr-2 rotate-180" />
                                 <IconArrowDown v-else class="mr-2" />
                                 Nome
                             </p>
                         </th>
                         <th class="px-4 py-2 text-center">
+                            <p class="flex items-center justify-center cursor-pointer" @click="sortTable('total_vendas')">
+                                <IconArrowDown v-if="sortColumn === 'total_vendas' && sortDirection === 'desc'"
+                                    class="mr-2 rotate-180" />
+                                <IconArrowDown v-else class="mr-2" />
+                                Nº de Pedidos 
+                            </p>
+                        </th>
+                        <th class="px-4 py-2 text-center">
+                            <p class="flex items-center justify-center cursor-pointer" @click="sortTable('quantidade')">
+                                <IconArrowDown v-if="sortColumn === 'quantidade' && sortDirection === 'desc'"
+                                    class="mr-2 rotate-180" />
+                                <IconArrowDown v-else class="mr-2" />
+                                Estoque
+                            </p>
+                        </th>
+                        <th class="px-4 py-2 text-center">
                             <p class="flex items-center justify-center cursor-pointer" @click="sortTable('marca')">
-                                <IconArrowDown v-if="sortColumn === 'marca' && sortDirection === 'desc'" class="mr-2 rotate-180" />
+                                <IconArrowDown v-if="sortColumn === 'marca' && sortDirection === 'desc'"
+                                    class="mr-2 rotate-180" />
                                 <IconArrowDown v-else class="mr-2" />
                                 Marca
                             </p>
                         </th>
                         <th class="px-4 py-2 text-center">
-                            <p class="flex items-center justify-center cursor-pointer" @click="sortTable('fornecedorNome')">
-                                <IconArrowDown v-if="sortColumn === 'fornecedorNome' && sortDirection === 'desc'" class="mr-2 rotate-180" />
+                            <p class="flex items-center justify-center cursor-pointer" @click="sortTable('segmento')">
+                                <IconArrowDown v-if="sortColumn === 'segmento' && sortDirection === 'desc'"
+                                    class="mr-2 rotate-180" />
                                 <IconArrowDown v-else class="mr-2" />
-                                Fornecedor
-                            </p>
-                        </th>
-                        <th class="px-4 py-2 text-center">
-                            <p class="flex items-center justify-center cursor-pointer" @click="sortTable('quantidade')">
-                                <IconArrowDown v-if="sortColumn === 'quantidade' && sortDirection === 'desc'" class="mr-2 rotate-180" />
-                                <IconArrowDown v-else class="mr-2" />
-                                Quantidade
-                            </p>
-                        </th>
-                        <th class="px-4 py-2 text-center">
-                            <p class="flex items-center justify-center cursor-pointer" @click="sortTable('preco')">
-                                <IconArrowDown v-if="sortColumn === 'preco' && sortDirection === 'desc'" class="mr-2 rotate-180" />
-                                <IconArrowDown v-else class="mr-2" />
-                                Preço
-                            </p>
-                        </th>
-                        <th class="px-4 py-2 text-center">
-                            <p class="flex items-center justify-center cursor-pointer" @click="sortTable('status')">
-                                <IconArrowDown v-if="sortColumn === 'status' && sortDirection === 'desc'" class="mr-2 rotate-180" />
-                                <IconArrowDown v-else class="mr-2" />
-                                Status
-                            </p>
-                        </th>
-                        <th class="px-4 py-2 text-center">
-                            <p class="flex items-center justify-center cursor-pointer" @click="sortTable('tempoMedio')">
-                                <IconArrowDown v-if="sortColumn === 'tempoMedio' && sortDirection === 'desc'" class="mr-2 rotate-180" />
-                                <IconArrowDown v-else class="mr-2" />
-                                Tempo Médio
-                            </p>
-                        </th>
-                        <th class="px-4 py-2 text-center">
-                            <p class="flex items-center justify-center cursor-pointer" @click="sortTable('criadoEm')">
-                                <IconArrowDown v-if="sortColumn === 'criadoEm' && sortDirection === 'desc'" class="mr-2 rotate-180" />
-                                <IconArrowDown v-else class="mr-2" />
-                                Criado em
+                                Segmento
                             </p>
                         </th>
                     </tr>
                 </thead>
                 <tbody>
-                    <tr v-for="(item, index) in sortedBody" :key="index" class="tr-class whitespace-nowrap">
-                        <td class="td-class text-center rounded-l-xl" data-label="Nome">{{ item.name }}</td>
+                    <tr v-for="(item, index) in sortedBody" :key="index" class="tr-class ">
+                        <td class="td-class text-center rounded-l-xl" data-label="Name">{{ item.name }}</td>
+                        <td class="td-class text-center" data-label="Nº de Pedidos">{{ item.total_vendas }}</td>
+                        <td class="td-class text-center" data-label="Estoque">{{ item.quantidade }}</td>
                         <td class="td-class text-center" data-label="Marca">{{ item.marca }}</td>
-                        <td class="td-class text-center" data-label="Fornecedor">{{ item.fornecedorNome }}</td>
-                        <td class="td-class text-center" data-label="Quantidade">{{ item.quantidade }}</td>
-                        <td class="td-class text-center" data-label="Preço">R$ {{ item.preco }}</td>
-                        <td class="td-class text-center" data-label="Status">
-                            <span :class="{
-                                'bg-[#66ff66] text-black': item.status === 'Ativo',
-                                'bg-red-600 text-white': item.status === 'Suspenso'
-                            }" class="px-2 py-1 text-xs rounded-md font-semibold uppercase antialiased">
-                                {{ item.status }}
-                            </span>
-                        </td>
-                        <td class="td-class text-center" data-label="Tempo Médio">{{ (item.tempoMedioDias) }}</td>
-                        <td class="td-class text-center" data-label="Criado em">{{ formatDate(item.created_at) }}</td>
+                        <td class="td-class text-center" data-label="Segmento">{{ item.segmento }}</td>
+                        <td class="td-class text-center rounded-r-xl" data-label="Segmento"> {{ item.tempo_medio_dias.toFixed(2) }}</td>
+                       
                     </tr>
                 </tbody>
             </table>
         </div>
     </div>
 </template>
+
 <script>
 import IconArrowDown from '../../Svg/IconArrowDown.vue';
 
 export default {
-    name: "FuncionarioTable",
+    name: "FornecedorTable",
+    emits: ['delete', 'details', 'update'],
     components: { IconArrowDown },
     props: {
         body: {
@@ -99,26 +77,26 @@ export default {
     },
     data() {
         return {
-            sortColumn: 'name',
-            sortDirection: 'asc',
+            sortColumn: 'name', // Default column for sorting
+            sortDirection: 'asc', // Default sorting direction
         };
     },
     computed: {
         sortedBody() {
             return [...this.body].sort((a, b) => {
                 let modifier = this.sortDirection === 'asc' ? 1 : -1;
-                if (this.sortColumn === 'preco') {
-                    return (parseFloat(a[this.sortColumn]) - parseFloat(b[this.sortColumn])) * modifier;
-                } else if (this.sortColumn === 'tempoMedio' || this.sortColumn === 'criadoEm') {
-                    // Convert dates to timestamps for comparison
-                    return (new Date(a[this.sortColumn]) - new Date(b[this.sortColumn])) * modifier;
-                } else {
-                    if (typeof a[this.sortColumn] === 'string') {
-                        return (a[this.sortColumn].localeCompare(b[this.sortColumn])) * modifier;
-                    } else {
-                        return (a[this.sortColumn] - b[this.sortColumn]) * modifier;
-                    }
+                let aValue = a[this.sortColumn];
+                let bValue = b[this.sortColumn];
+                
+                // Convert to numbers if the value is numeric
+                if (!isNaN(aValue) && !isNaN(bValue)) {
+                    aValue = Number(aValue);
+                    bValue = Number(bValue);
                 }
+
+                if (aValue < bValue) return -1 * modifier;
+                if (aValue > bValue) return 1 * modifier;
+                return 0;
             });
         }
     },
@@ -127,21 +105,12 @@ export default {
             if (this.sortColumn === column) {
                 this.sortDirection = this.sortDirection === 'asc' ? 'desc' : 'asc';
             } else {
+                this.sortColumn = column;
                 this.sortDirection = 'asc';
             }
-            this.sortColumn = column;
-        },
-        formatDate(dateString) {
-            const date = new Date(dateString);
-            const day = String(date.getDate()).padStart(2, '0');
-            const month = String(date.getMonth() + 1).padStart(2, '0');
-            const year = date.getFullYear();
-            const hours = String(date.getHours()).padStart(2, '0');
-            const minutes = String(date.getMinutes()).padStart(2, '0');
-            return `${day}/${month}/${year} ${hours}:${minutes}`;
         }
     }
-}
+};
 </script>
 
 <style scoped>

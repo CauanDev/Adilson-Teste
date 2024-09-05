@@ -16,51 +16,79 @@ use Illuminate\Support\Facades\DB;
 class ProdutosController extends Controller
 {
     // Método para listar todos os produtos  public function index(AuthRequest $request)
-    public function index()
+    public function index(AuthRequest $request)
     {
         // Recupera todos os produtos com informações da marca associada
         $produtos = Produto::with('marca') // Carrega o relacionamento com a marca
             ->orderBy('id', 'DESC')
             ->get();
-
-        // Inicializa um array para armazenar a contagem de vendas por produto
+    
+        // Inicializa um array para armazenar a contagem de vendas por produto e a média de tempo
         $produtoVendas = [];
-
+        $produtoTempoMedio = [];
+    
         // Recupera todos os pedidos
         $pedidos = Pedido::all();
-
+    
         // Itera sobre os pedidos e contabiliza as vendas dos produtos
         foreach ($pedidos as $pedido) {
             // Decodifica o JSON dos produtos do pedido
             $produtosPedido = json_decode($pedido->produtos, true);
-
+    
             // Verifica se o campo produtos foi decodificado corretamente
             if (is_array($produtosPedido)) {
                 foreach ($produtosPedido as $produto) {
                     // Busca o produto pelo nome
                     $produtoData = Produto::where('name', $produto['name'])->first();
-
+    
                     if ($produtoData) {
                         // Obtém o ID do produto e a quantidade vendida
                         $produtoId = $produtoData->id;
                         $quantidade = $produto['quantidade'] ?? 1; // Assume 1 se não especificado
-
+    
                         // Adiciona a quantidade vendida ao total do produto
                         if (isset($produtoVendas[$produtoId])) {
-                            $produtoVendas[$produtoId]++;
+                            $produtoVendas[$produtoId]['quantidade'] += $quantidade;
+                            $produtoVendas[$produtoId]['datas'][] = $pedido->created_at; // Adiciona data da compra
                         } else {
-                            $produtoVendas[$produtoId]=1;
+                            $produtoVendas[$produtoId] = [
+                                'quantidade' => $quantidade,
+                                'datas' => [$pedido->created_at],
+                            ];
                         }
                     }
                 }
             }
         }
-
-        // Retorna a lista de produtos com a quantidade total de vendas em formato JSON
+    
+        // Calcula a média de tempo entre compras para cada produto
+        foreach ($produtoVendas as $produtoId => $dados) {
+            $datas = $dados['datas'];
+            $totalCompras = count($datas);
+    
+            if ($totalCompras > 1) {
+                // Ordena as datas e calcula as diferenças entre compras
+                sort($datas);
+                $diferencas = [];
+                for ($i = 1; $i < $totalCompras; $i++) {
+                    $dataAnterior = new \DateTime($datas[$i - 1]);
+                    $dataAtual = new \DateTime($datas[$i]);
+                    $diferencas[] = $dataAtual->diff($dataAnterior)->days;
+                }
+                $tempoMedioDias = array_sum($diferencas) / count($diferencas);
+            } else {
+                $tempoMedioDias = 0; // Não há comparação suficiente para calcular a média
+            }
+    
+            $produtoTempoMedio[$produtoId] = $tempoMedioDias;
+        }
+    
+        // Retorna a lista de produtos com a quantidade total de vendas e a média de tempo entre compras
         return response()->json([
             'status' => true,
-            'produtos' => $produtos->map(function ($produto) use ($produtoVendas) {
-                $totalVendas = $produtoVendas[$produto->id] ?? 0;
+            'produtos' => $produtos->map(function ($produto) use ($produtoVendas, $produtoTempoMedio) {
+                $totalVendas = $produtoVendas[$produto->id]['quantidade'] ?? 0;
+                $tempoMedioDias = $produtoTempoMedio[$produto->id] ?? 0;
                 return [
                     'id' => $produto->id,
                     'name' => $produto->name,
@@ -72,10 +100,12 @@ class ProdutosController extends Controller
                     'status' => $produto->status,
                     'created_at' => $produto->created_at,
                     'total_vendas' => $totalVendas, // Adiciona a quantidade total de vendas
+                    'tempo_medio_dias' => $tempoMedioDias, // Adiciona o tempo médio de compra
                 ];
             }),
         ], 200);
     }
+    
 
 
     // Método para excluir um produto

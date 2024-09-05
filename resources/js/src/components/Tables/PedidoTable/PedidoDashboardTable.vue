@@ -1,76 +1,136 @@
 <template>
-    <div>
-        <div class="flex items-center justify-center sm:ml-0 ml-4 whitespace-nowrap">
+    <div class="max-h-[364px] overflow-y-auto">
+        <div class="flex items-center justify-center sm:ml-0 ml-4  p-2">
             <table class="border-separate border-spacing-y-0.5 text-sm w-full max-w-sm mx-auto">
-                <thead class="hidden sm:table-header-group">
+                <thead class="hidden sm:table-header-group select-none">
                     <tr>
-                        <th class="px-4 py-2 text-center">Valor</th>
-                        <th class="px-4 py-2 text-center">Nome Cliente</th>
-                        <th class="px-4 py-2 text-center ">Nome Funcionario</th>
-                        <th class="px-4 py-2 text-center">Status</th>
-                        <th class="px-4 py-2 text-center">Pedido Em</th>
+                        <th class="px-4 py-2 text-center">
+                            <p class="flex items-center justify-center cursor-pointer" @click="sortTable('total')">
+                                <IconArrowDown 
+                                    v-if="sortColumn === 'total' && sortDirection === 'desc'" 
+                                    class="mr-2 rotate-180" 
+                                />
+                                <IconArrowDown 
+                                    v-else 
+                                    class="mr-2" 
+                                />
+                                Valor
+                            </p>
+                        </th>
+                        <th class="px-4 py-2 text-center">
+                            <p class="flex items-center justify-center cursor-pointer" @click="sortTable('cliente_nome')">
+                                <IconArrowDown 
+                                    v-if="sortColumn === 'cliente_nome' && sortDirection === 'desc'" 
+                                    class="mr-2 rotate-180" 
+                                />
+                                <IconArrowDown 
+                                    v-else 
+                                    class="mr-2" 
+                                />
+                                Nome Cliente
+                            </p>
+                        </th>
+                        <th class="px-4 py-2 text-center">
+                            <p class="flex items-center justify-center cursor-pointer" @click="sortTable('funcionario_nome')">
+                                <IconArrowDown 
+                                    v-if="sortColumn === 'funcionario_nome' && sortDirection === 'desc'" 
+                                    class="mr-2 rotate-180" 
+                                />
+                                <IconArrowDown 
+                                    v-else 
+                                    class="mr-2" 
+                                />
+                                Nome Funcionario
+                            </p>
+                        </th>
+                        <th class="px-4 py-2 text-center">
+                            <p class="flex items-center justify-center cursor-pointer" @click="sortTable('created_at')">
+                                <IconArrowDown 
+                                    v-if="sortColumn === 'created_at' && sortDirection === 'desc'" 
+                                    class="mr-2 rotate-180" 
+                                />
+                                <IconArrowDown 
+                                    v-else 
+                                    class="mr-2" 
+                                />
+                                Data do Pedido
+                            </p>
+                        </th>
                     </tr>
                 </thead>
                 <tbody>
-                    <tr v-for="(item, index) in body" :key="index" class="tr-class mobile">
-                        <td class="td-class text-center rounded-l-xl whitespace-nowrap" data-label="Valor">R$ {{
-                            item.preco }}</td>
-                        <td class="td-class text-center" data-label="Nome Cliente">{{ item.cliente_nome ||
-                            'Carregando...' }}</td>
-                        <td class="td-class text-center" data-label="Nome Funcionario">{{ item.funcionario_nome ||
-                            'Carregando...' }}</td>
-                        <td class="td-class text-center" data-label="Status">
-                            <span :class="{
-                                'bg-[#66ff66] text-black': item.status === 'Entregue',
-                                'bg-red-600 text-white whitespace-nowrap': item.status === 'Não Processado'
-                            }" class="rounded-md px-2 py-1 text-xs font-semibold uppercase antialiased">
-                                {{ item.status }}
-                            </span>
-                        </td>
-                        <td class="td-class text-center rounded-r-xl" data-label="Nome Funcionario">{{formatDate(item.created_at)}}</td>
-
+                    <tr v-for="(item, index) in sortedBody" :key="index" class="tr-class">
+                        <td class="td-class text-center rounded-l-xl whitespace-nowrap" data-label="Valor">R$ {{ item.total }}</td>
+                        <td class="td-class text-center" data-label="Nome Cliente">{{ item.cliente_nome || 'Carregando...' }}</td>
+                        <td class="td-class text-center" data-label="Nome Funcionario">{{ item.funcionario_nome || 'Carregando...' }}</td>
+                        <td class="td-class text-center rounded-r-xl" data-label="Data do Pedido">{{ formatDate(item.created_at,'dd/mm/yyyy') || 'Carregando...' }}</td>
                     </tr>
                 </tbody>
             </table>
         </div>
     </div>
 </template>
-
 <script>
+import IconArrowDown from '../../Svg/IconArrowDown.vue';
 
 export default {
     name: "PedidoTable",
     emits: ['delete', 'details', 'update'],
+    components: { IconArrowDown },
     props: {
         body: {
             type: Array,
             required: true,
         },
     },
-    methods: {
-        getStatus(item) {
-            if (item.status === 'Não Processado') return "Entregar Pedido";
-            return "Cancelar Pedido";
-
-        },
-        formatDate(dateString) {
-            const date = new Date(dateString);
-            const day = String(date.getDate()).padStart(2, '0');
-            const month = String(date.getMonth() + 1).padStart(2, '0');
-            const year = date.getFullYear();
-            const hours = String(date.getHours()).padStart(2, '0');
-            const minutes = String(date.getMinutes()).padStart(2, '0');
-            return `${day}/${month}/${year} ${hours}:${minutes}`;
-        }
-
-
+    data() {
+        return {
+            sortColumn: 'total',
+            sortDirection: 'asc',
+        };
     },
-    mounted()
-    {
-        console.log(this.body)
+    computed: {
+        sortedBody() {
+            return [...this.body].sort((a, b) => {
+                let modifier = this.sortDirection === 'asc' ? 1 : -1;
+                
+                if (this.sortColumn === 'total') {
+                    return (parseFloat(a[this.sortColumn].replace('R$', '').replace(',', '.')) - parseFloat(b[this.sortColumn].replace('R$', '').replace(',', '.'))) * modifier;
+                }
+                
+                if (this.sortColumn === 'created_at') {
+                    const dateA = new Date(a.created_at);
+                    const dateB = new Date(b.created_at);
+                    return (dateA - dateB) * modifier;
+                }
+
+                if (a[this.sortColumn] < b[this.sortColumn]) return -1 * modifier;
+                if (a[this.sortColumn] > b[this.sortColumn]) return 1 * modifier;
+                return 0;
+            });
+        }
+    },
+    methods: {
+        sortTable(column) {
+            if (this.sortColumn === column) {
+                this.sortDirection = this.sortDirection === 'asc' ? 'desc' : 'asc';
+            } else {
+                this.sortDirection = 'asc';
+            }
+            this.sortColumn = column;
+        },
+        formatDate(dateStr) {
+        if (!dateStr) return '';
+        const date = new Date(dateStr); // Convert string to Date object
+        const day = String(date.getDate()).padStart(2, '0'); // Get day and pad with leading zero if necessary
+        const month = String(date.getMonth() + 1).padStart(2, '0'); // Get month (add 1 because months are zero-indexed)
+        const year = date.getFullYear(); // Get year
+        return `${month}/${day}/${year}`; // Return formatted date
+    }
     }
 };
 </script>
+
 
 <style scoped>
 /* Ensure no horizontal scrolling */
@@ -91,19 +151,16 @@ body {
     table {
         @apply w-full max-w-xs mx-auto;
         border-collapse: collapse;
-        
     }
 
     .td-class {
         @apply text-gray-900;
         display: block;
-        width: 210%;
+        width: 100%;
         position: relative;
         padding-left: 50%;
-        
         box-sizing: border-box;
         font-size: 0.875rem;
-        /* smaller font size */
     }
 
     .td-class::before {
@@ -113,7 +170,6 @@ body {
         left: 0;
         width: 45%;
         padding-left: 10px;
-        padding-right: 15px;
         white-space: nowrap;
     }
 
@@ -123,10 +179,8 @@ body {
 
     .td-class span {
         @apply text-xs px-2 py-1;
-        /* smaller padding */
     }
 
-    /* Mobile-specific styles for Ações column */
     .td-class[data-label="Ações"] {
         display: flex;
         text-align: center;
@@ -142,20 +196,14 @@ body {
         display: block;
         width: auto;
         margin-bottom: 0.5rem;
-        /* Space between buttons */
     }
 
     .td-class[data-label="Ações"] button:last-of-type {
         margin-bottom: 0;
-        /* Remove bottom margin for the last button */
     }
 
     .td-class {
         @apply rounded-none;
-    }
-    .texto{
-        font-size: 10px;
-       
     }
 }
 </style>

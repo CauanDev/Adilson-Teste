@@ -63,10 +63,12 @@ class PedidosController extends Controller
             // Busca o nome do cliente associado ao pedido
             $cliente = Cliente::find($pedido->cliente_id);
             $pedido->cliente_nome = $cliente ? $cliente->nome : null;
-
+            $pedido->cliente_tipo = $cliente ? $cliente->tipo : null;
+            $pedido->cliente_sexo = $cliente ? $cliente->sexo : null;
             // Busca o nome do funcionário associado ao pedido
             $funcionario = Funcionario::find($pedido->funcionario_id);
             $pedido->funcionario_nome = $funcionario ? $funcionario->nome : null;
+            $pedido->funcionario_sexo = $funcionario ? $funcionario->sexo : null;
 
             // Atualiza o campo produtos do pedido com os IDs e segmentos
             $pedido->produtos = $produtos;
@@ -98,6 +100,7 @@ class PedidosController extends Controller
             foreach ($request->produtos as $produto) {
                 $produtoModel = Produto::where('name', $produto['name'])->firstOrFail();
                 $produtoModel->quantidade -= $produto['quantidade'];
+                if($produtoModel->quantidade==0)$produtoModel->status="Suspenso";
                 $produtoModel->save();
             }
 
@@ -144,6 +147,8 @@ class PedidosController extends Controller
                 foreach ($produtosAntigos as $produtoAntigo) {
                     $produtoModel = Produto::where('name', $produtoAntigo['name'])->firstOrFail();
                     $produtoModel->quantidade += $produtoAntigo['quantidade'];
+                    $produtoModel->status = ($produtoModel->quantidade == 0) ? "Suspenso" : "Ativo";
+
                     $produtoModel->save();
                 }
 
@@ -151,6 +156,7 @@ class PedidosController extends Controller
                 foreach ($produtosNovos as $produtoNovo) {
                     $produtoModel = Produto::where('name', $produtoNovo['name'])->firstOrFail();
                     $produtoModel->quantidade -= $produtoNovo['quantidade'];
+                    $produtoModel->status = ($produtoModel->quantidade == 0) ? "Suspenso" : "Ativo";
                     $produtoModel->save();
                 }
 

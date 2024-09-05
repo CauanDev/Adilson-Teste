@@ -23,7 +23,7 @@
                             </p>
                         </th>
                         <th class="px-4 py-2 text-center">
-                            <p class="flex items-center justify-center cursor-pointer" @click="sortTable('salario')">
+                            <p class="flex items-center justify-center cursor-pointer" @click="sortTable('pedidos_count')">
                                 <IconArrowDown class="mr-2" />
                                 Nº de Pedidos
                             </p>

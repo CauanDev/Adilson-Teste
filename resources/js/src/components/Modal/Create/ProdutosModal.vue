@@ -172,7 +172,8 @@ export default {
             }
             else {
                 this.disabled = true
-                this.productSelected(this.filteredProducts);
+                this.productSelected(this.filteredProducts[0]);
+                console.log()
             }
         },
         productSelected(product) {

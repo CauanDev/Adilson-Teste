@@ -68,7 +68,7 @@ export default {
             newValue: {
                 name: this.funcionario.name || '',
                 sexo: this.funcionario.sexo || '',
-                idade: format(new Date(this.funcionario.data_nasc ), 'dd/MM/yyyy')|| '',
+                idade: this.funcionario.data_nasc|| '',
                 email: this.funcionario.email || '',
                 salario: this.funcionario.salario || '',
             }

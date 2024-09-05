@@ -40,7 +40,7 @@ import ClienteTable from "../src/components/Tables/ClienteTable/ClienteTable.vue
 import ClienteModal from "../src/components/Modal/Create/ClienteModal.vue"
 import http from "../src/services/http.js"
 import ClienteModalUpdate from "../src/components/Modal/Update/ClienteModal.vue"
-import { format } from 'date-fns';
+import { format, parse } from 'date-fns';
 
 export default {
     name: 'ClienteView',
@@ -57,7 +57,7 @@ export default {
             wrongWarning: false, // Controle para mostrar/ocultar aviso de erro
             sucessWarning: false, // Controle para mostrar/ocultar aviso de sucesso
             warning: '', // Mensagem de aviso a ser exibida
-            allClientes:[]
+            allClientes: []
         }
     },
     methods: {
@@ -78,17 +78,22 @@ export default {
         // Mapeia a resposta do servidor para o formato esperado pela tabela
         mapCliente(array) {
             this.clientes = array.map(cliente => {
+                const parsedDate = parse(cliente.data_nasc, 'yyyy-MM-dd', new Date());
+                const formattedDate = format(parsedDate, 'dd/MM/yyyy');
                 return {
                     id: cliente.id,
                     name: cliente.nome,
                     status: cliente.status,
-                    idade: format(new Date(cliente.data_nasc), 'dd/MM/yyyy'),
+                    idade: formattedDate,
                     sexo: cliente.sexo,
                     tipo: cliente.tipo,
                     email: cliente.email,
+                    produtos:cliente.pedidos.length,
                     created_at: format(new Date(cliente.created_at), 'dd/MM/yyyy'),
                 };
-            })
+            });
+
+
         },
         formatDate(dateString) {
             // Verifica se a string tem 8 caracteres
@@ -108,19 +113,19 @@ export default {
         // Aplica o filtro fornecido e atualiza a lista de clientes
         async applyFilter(filter) {
             this.loading = true
-            const filteresClientes = this.allClientes.filter(cliente=>{
+            const filteresClientes = this.allClientes.filter(cliente => {
                 let isValid = true;
-                if (filter.nome){
+                if (filter.nome) {
                     const nomeFilter = filter.nome.toLowerCase();
                     const nomeCliente = cliente.nome.toLowerCase()
-                    if(!nomeCliente.includes(nomeFilter))isValid = false
+                    if (!nomeCliente.includes(nomeFilter)) isValid = false
                 }
 
-                if (filter.status && filter.status!=='all') if (cliente.status !== filter.status) isValid = false;
+                if (filter.status && filter.status !== 'all') if (cliente.status !== filter.status) isValid = false;
                 if (filter.sexo && filter.sexo !== 'all') if (cliente.sexo !== filter.sexo) isValid = false;
-                if (filter.tipo && filter.tipo !=='all') if (cliente.tipo !== filter.tipo) isValid = false;
+                if (filter.tipo && filter.tipo !== 'all') if (cliente.tipo !== filter.tipo) isValid = false;
 
-               
+
                 if ((filter.idadeMin && cliente.idade < filter.idadeMin) ||
                     (filter.idadeMax && cliente.idade > filter.idadeMax)) {
                     isValid = false;
@@ -138,12 +143,12 @@ export default {
                     if (createdAt > dataMaxima) isValid = false;
                 }
 
-                if(filter.quantidadeMinima)if (cliente.pedidos.length < quantidadeMinima)isValid = false;
-                if(filter.quantidadeMaxima)if (cliente.pedidos.length > quantidadeMaxima)isValid = false;
+                if (filter.quantidadeMinima) if (cliente.pedidos.length < quantidadeMinima) isValid = false;
+                if (filter.quantidadeMaxima) if (cliente.pedidos.length > quantidadeMaxima) isValid = false;
 
                 return isValid;
             })
-           
+
             this.mapCliente(filteresClientes)
             this.loading = false
         },

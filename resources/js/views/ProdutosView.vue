@@ -205,21 +205,29 @@ export default {
 
         async updateProduto(value) {
             this.loading = true;
-            try {
-                await http.post('/update-produto', { "status": "change", id: value.id });
-                this.sucessWarning = true;
-                this.warning = "Status Atualizado";
-                this.allProdutos = this.allProdutos.map(produto => {
-                    if (produto.id === value.id) {
-                        const novoStatus = produto.status === "Ativo" ? "Suspenso" : "Ativo";
-                        return { ...produto, status: novoStatus };
-                    }
-                    return produto;
-                });
-                this.mapProdutos(this.allProdutos);
-            } catch (error) {
-                console.log(error);
+            if (value.quantidade !== 0) {
+                try {
+                    await http.post('/update-produto', { "status": "change", id: value.id });
+                    this.sucessWarning = true;
+                    this.warning = "Status Atualizado";
+                    this.allProdutos = this.allProdutos.map(produto => {
+                        if (produto.id === value.id) {
+                            const novoStatus = produto.status === "Ativo" ? "Suspenso" : "Ativo";
+                            return { ...produto, status: novoStatus };
+                        }
+                        return produto;
+                    });
+                    this.mapProdutos(this.allProdutos);
+                } catch (error) {
+                    console.log(error);
+                }
             }
+            else
+            {
+                this.wrongWarning = true
+                this.warning = "O Produto Não Possui Estoque";
+            }
+
             this.loading = false;
         },
     },

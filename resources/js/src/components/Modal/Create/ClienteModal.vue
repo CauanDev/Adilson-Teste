@@ -95,7 +95,7 @@ export default {
                 }
                 return value;
             };
-
+            console.log(formatDate(this.idade))
             this.$emit('addCliente', {
                 nome: this.name,
                 sexo: this.sexo,

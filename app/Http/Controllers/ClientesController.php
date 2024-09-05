@@ -132,7 +132,7 @@ class ClientesController extends Controller
 
 
             // Converte a data de nascimento para o formato Y-m-d
-            $data_nasc = \Carbon\Carbon::createFromFormat('d/m/Y', $request->data_nasc)->format('Y-m-d');
+            $data_nasc = Carbon::createFromFormat('d/m/Y', $request->data_nasc)->format('Y-m-d');
             // Cria um novo cliente com os dados fornecidos na requisição
             $cliente = Cliente::create([
                 'nome' => $request->nome,

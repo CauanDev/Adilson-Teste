@@ -1,5 +1,5 @@
 <template>
-    <div class="flex justify-center max-h-[200px] overflow-y-auto w-full sm:w-[100%]">
+    <div class="flex justify-center max-h-[200px] overflow-y-auto w-full sm:w-[100%]" v-if="allProdutos.length > 0">
         <div class="w-full flex flex-col items-center gap-2 mt-2">
             <InputName small placeholder="Nome do Produto" @input="applyFilter" v-model="nameProduto" />
 
@@ -8,7 +8,7 @@
                     <thead class="text-xs uppercase bg-gray-300 text-center text-black sticky top-0 z-10">
                         <tr>
                             <th v-for="(header, index) in headers" :key="index"
-                                class="px-2 py-2 border-b border-gray-400 whitespace-nowrap">
+                                class="px-1 py-2 border-b border-gray-400 whitespace-nowrap">
                                 {{ header }}
                             </th>
                         </tr>
@@ -16,13 +16,14 @@
                     <tbody class="bg-white">
                         <tr v-for="(row, rowIndex) in produtos" :key="rowIndex"
                             class="border-b border-gray-400 text-center">
-                            <td class="px-2 py-2">
+                            <td class="px-1 py-2 text-xs">
                                 {{ row.name }}
                             </td>
-                            <td class="px-2 py-2">
+                            <td class=" py-2">
                                 R${{ row.preco.replace('.', ',') }}
                             </td>
-                            <td class="px-2 py-2">
+                            <td>{{row.quantidade}}</td>
+                            <td class=" py-2">
                                 <ItemCounter 
                                     :maxValue="row.quantidade"
                                     :value="getCounterValue(row.name)"
@@ -34,6 +35,14 @@
                 </table>
             </div>
         </div>
+    </div>
+    <div v-else class="text-center">
+        <router-link to="/compras">
+            <p class="text-gray-500 text-xs mb-0.5">Nenhum Produto Disponível</p>
+            <button type="button"
+                class="text-white bg-green-700 hover:bg-green-800 focus:ring-4 focus:ring-green-300 font-medium rounded-lg text-sm px-5 py-2.5 me-2 mb-2 focus:outline-none">Criar
+                Produto</button>
+        </router-link>
     </div>
 </template>
 

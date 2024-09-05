@@ -42,7 +42,7 @@ import WrongWarning from "../src/components/Warnings/WrongWarning.vue";
 import SucessWarning from "../src/components/Warnings/SucessWarning.vue";
 import FuncionarioModal from "../src/components/Modal/Create/FuncionarioModal.vue";
 import http from "../src/services/http.js";
-import { format } from 'date-fns';
+import { format, parse } from 'date-fns';
 export default {
     name: 'FuncionarioView',
     components: {
@@ -85,11 +85,14 @@ export default {
         // Mapeia a lista de funcionários para o formato usado na tabela e armazena em `allFuncionarios`
         mapFuncionarios(array) {
             this.funcionarios = array.map(funcionario => {
+                const parsedDataNasc = parse(funcionario.data_nasc, 'yyyy-MM-dd', new Date());
+                const formattedDataNasc = format(parsedDataNasc, 'dd/MM/yyyy');
+
                 return {
                     id: funcionario.id,
                     name: funcionario.nome,
                     status: funcionario.status,
-                    data_nasc: funcionario.data_nasc,
+                    data_nasc: formattedDataNasc,
                     sexo: funcionario.sexo,
                     email: funcionario.email,
                     salario: funcionario.salario,

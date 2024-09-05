@@ -1,45 +1,39 @@
 <template>
     <div>
-        <div class="flex items-center justify-center sm:ml-0 ml-4">
+        <div class="flex items-center justify-center sm:ml-0 ml-4 whitespace-nowrap">
             <table class="border-separate border-spacing-y-0.5 text-sm w-full max-w-sm mx-auto">
                 <thead class="hidden sm:table-header-group">
                     <tr class="select-none">
                         <th class="px-4 py-2 text-center">
                             <p class="flex items-center justify-center cursor-pointer" @click="sortTable('name')">
-                                <IconArrowDown 
-                                    v-if="sortColumn === 'name' && sortDirection === 'desc'" 
-                                    class="mr-2 rotate-180" 
-                                />
-                                <IconArrowDown 
-                                    v-else 
-                                    class="mr-2" 
-                                />
+                                <IconArrowDown v-if="sortColumn === 'name' && sortDirection === 'desc'"
+                                    class="mr-2 rotate-180" />
+                                <IconArrowDown v-else class="mr-2" />
                                 Nome
                             </p>
                         </th>
                         <th class="px-4 py-2 text-center">
                             <p class="flex items-center justify-center cursor-pointer" @click="sortTable('sexo')">
-                                <IconArrowDown 
-                                    v-if="sortColumn === 'sexo' && sortDirection === 'desc'" 
-                                    class="mr-2 rotate-180" 
-                                />
-                                <IconArrowDown 
-                                    v-else 
-                                    class="mr-2" 
-                                />
+                                <IconArrowDown v-if="sortColumn === 'sexo' && sortDirection === 'desc'"
+                                    class="mr-2 rotate-180" />
+                                <IconArrowDown v-else class="mr-2" />
                                 Sexo
                             </p>
                         </th>
                         <th class="px-4 py-2 text-center">
+                            <p class="flex items-center justify-center cursor-pointer"
+                                @click="sortTable('produtos')">
+                                <IconArrowDown v-if="sortColumn === 'produtos' && sortDirection === 'desc'"
+                                    class="mr-2 rotate-180" />
+                                <IconArrowDown v-else class="mr-2" />
+                                Nº de Pedidos
+                            </p>
+                        </th>
+                        <th class="px-4 py-2 text-center">
                             <p class="flex items-center justify-center cursor-pointer" @click="sortTable('status')">
-                                <IconArrowDown 
-                                    v-if="sortColumn === 'status' && sortDirection === 'desc'" 
-                                    class="mr-2 rotate-180" 
-                                />
-                                <IconArrowDown 
-                                    v-else 
-                                    class="mr-2" 
-                                />
+                                <IconArrowDown v-if="sortColumn === 'status' && sortDirection === 'desc'"
+                                    class="mr-2 rotate-180" />
+                                <IconArrowDown v-else class="mr-2" />
                                 Status
                             </p>
                         </th>
@@ -50,6 +44,7 @@
                     <tr v-for="(item, index) in sortedBody" :key="index" class="tr-class whitespace-nowrap">
                         <td class="td-class text-center rounded-l-xl" data-label="Name">{{ item.name }}</td>
                         <td class="td-class text-center" data-label="Sexo">{{ item.sexo }}</td>
+                        <td class="td-class text-center" data-label="Pedidos">{{ item.produtos }}</td>
                         <td class="td-class text-center" data-label="Status">
                             <span @click="this.$emit('update', item)" :class="{
                                 'bg-[#66ff66] text-black': item.status === 'Ativo',
@@ -73,7 +68,6 @@
         </div>
     </div>
 </template>
-
 <script>
 import IconArrowDown from '../../Svg/IconArrowDown.vue';
 
@@ -96,7 +90,8 @@ export default {
         sortedBody() {
             return [...this.body].sort((a, b) => {
                 let modifier = this.sortDirection === 'asc' ? 1 : -1;
-                if (this.sortColumn === 'salario') {
+
+                if (this.sortColumn === 'salario' || this.sortColumn === 'produtos') {
                     return (parseFloat(a[this.sortColumn]) - parseFloat(b[this.sortColumn])) * modifier;
                 } else {
                     if (a[this.sortColumn] < b[this.sortColumn]) return -1 * modifier;
