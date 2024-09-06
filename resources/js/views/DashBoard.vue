@@ -11,13 +11,14 @@
     <ClienteDashboard v-if="categoria === 'clientes'" />
     <ProdutosDashboard v-if="categoria === 'produtos'" />
     <PedidosDashboard v-if="categoria === 'pedidos'" />
+    <ComprasDashboard v-if="categoria === 'compras'"/>
 </template>
 
 <script>
 import TitleView from "../src/components/Title/TitleView.vue";
 import SelectMenu from "../src/components/Inputs/SelectMenu.vue";
 import PedidosDashboard from "../src/components/DashBoard/Views/PedidosDashboard.vue";
-
+import ComprasDashboard from "../src/components/DashBoard/Views/ComprasDashboard.vue";
 
 
 
@@ -28,7 +29,7 @@ import ProdutosDashboard from "../src/components/DashBoard/Views/ProdutosDashboa
 export default {
     name: 'DashBoard',
     components: {
-
+        ComprasDashboard,
         SelectMenu,
         TitleView,
         ClienteDashboard,

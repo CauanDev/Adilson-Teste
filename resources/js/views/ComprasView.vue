@@ -172,16 +172,6 @@ export default {
                 return isValid;
             });
 
-
-            // if (filteredCompras.length <= 0) {
-            //     this.wrongWarning = true;
-            //     this.warning = "Consulta retornou zero";
-            // }
-            // else {
-            //     this.sucessWarning = true;
-            //     this.warning = `${filteredCompras.length} Linhas Retornadas`;
-            //     this.mapCompras(filteredCompras)
-            // }
             this.mapCompras(filteredCompras)
 
             this.loading = false;

@@ -4,8 +4,7 @@
 
     <div class="flex text-center bg-[#dbdbdb] p-2 rounded-lg mb-2 shadow-2xl border-[1px] border-gray-400">
         <div class="flex-1">
-            <h2 class="text-xl font-bold mb-2">{{ this.funcionario ? 'Funcionários com Maior Valor de Vendas' : 'Clientes com Maior Valor de Compras' }} por Dia Separado por
-                Sexo</h2>
+            <h2 class="text-xl font-bold mb-2">{{ this.funcionario ? 'Funcionários com Maior Valor de Vendas' : 'Clientes com Maior Valor de Compras' }}</h2>
             <apexchart ref="barChart" type="bar" :options="chartOptions" :series="chartSeries" />
         </div>
     </div>

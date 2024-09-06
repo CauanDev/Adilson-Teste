@@ -14,6 +14,8 @@
           <option value="clientes">Clientes</option>
           <option value="produtos">Produtos</option>
           <option value="pedidos">Pedidos</option>
+          <option value="compras">Compras</option>
+
         </select>
         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.2"
           stroke="currentColor" class="h-5 w-5 ml-1 absolute top-3.5 right-2.5 text-slate-700">
