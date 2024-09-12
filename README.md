@@ -46,7 +46,9 @@
   </ol>
 
 <p>Imagem de Exemplo</p>
+
 ![image](https://github.com/user-attachments/assets/032b1192-4902-4138-a7ee-642fbfb28036)
+
   <h2>📅 Próximas Funcionalidades</h2>
   <ul>
     <li>Exportação de relatórios em PDF e Excel.</li>
