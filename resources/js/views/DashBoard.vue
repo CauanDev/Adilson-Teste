@@ -43,7 +43,6 @@ export default {
         }
     },
     methods: {
-
         handleCategoryChange(selectedCategory) {
             this.categoria = selectedCategory;
         },

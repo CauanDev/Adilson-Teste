@@ -10,11 +10,10 @@ class ComprasController extends Controller
 {
     public function index(AuthRequest $request)
     {
-        $compras = Compra::with('produto.marca.fornecedor') // Inclui as informações do produto e do fornecedor
+        $compras = Compra::with('produto.marca.fornecedor') 
             ->orderBy('id', 'DESC')
             ->get();
 
-        // Retorna a lista de produtos com informações da marca em formato JSON
         return response()->json([
             'status' => true,
             'compras' => $compras,

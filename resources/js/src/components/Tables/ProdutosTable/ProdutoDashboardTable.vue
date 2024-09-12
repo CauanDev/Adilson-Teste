@@ -44,6 +44,14 @@
                                 Segmento
                             </p>
                         </th>
+                        <th class="px-4 py-2 text-center">
+                            <p class="flex items-center justify-center cursor-pointer" @click="sortTable('quantidade')">
+                                <IconArrowDown v-if="sortColumn === 'quantidade' && sortDirection === 'desc'"
+                                    class="mr-2 rotate-180" />
+                                <IconArrowDown v-else class="mr-2" />
+                                Média<br>Compra
+                            </p>
+                        </th>
                     </tr>
                 </thead>
                 <tbody>

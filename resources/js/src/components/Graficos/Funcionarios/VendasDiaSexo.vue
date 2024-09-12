@@ -1,11 +1,17 @@
 <template>
   <div class="flex text-center bg-[#dbdbdb] w-1/2 p-2 rounded-lg mb-2 shadow-2xl border-[1px] border-gray-400">
     <div class="flex-1">
-      <h2 class="text-xl font-bold mb-2">Valor das {{ cliente ? 'Compras ' : 'Vendas' }} por Dia Separado por Sexo</h2>
-      <apexchart type="line" width="99%" height="300" :options="chartOptions" :series="series"></apexchart>
+      <div v-if="series.length > 0">
+        <h2 class="text-xl font-bold mb-2">Valor das {{ cliente ? 'Compras' : 'Vendas' }} por Dia Separado por Sexo</h2>
+        <apexchart type="line" width="99%" height="300" :options="chartOptions" :series="series"></apexchart>
+      </div>
+      <div v-else class="flex justify-center items-center h-full">
+        <h2 class="text-xl font-bold mb-2 rotate-12">Sem Dados Disponíveis</h2>
+      </div>
     </div>
   </div>
 </template>
+
 
 <script>
 import VueApexCharts from "vue3-apexcharts";

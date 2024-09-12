@@ -1,7 +1,12 @@
 <template>
     <div class="flex-1 text-center bg-[#dbdbdb] shadow-2xl rounded-lg p-2 border-[1px] border-gray-400">
-        <h2 class="text-xl font-bold mb-2">Quantidade de Clientes por Tipo e Sexo</h2>
-        <apexchart ref="barChart" type="bar" width="100%" :options="chartOptions" :series="chartSeries"></apexchart>
+        <div v-if="body.length > 0">
+            <h2 class="text-xl font-bold mb-2">Quantidade de Clientes por Tipo e Sexo</h2>
+            <apexchart ref="barChart" type="bar" width="100%" :options="chartOptions" :series="chartSeries"></apexchart>
+        </div>
+        <div v-else class="flex justify-center items-center h-full">
+            <h2 class="text-xl font-bold mb-2 rotate-12">Sem Dados Disponíveis</h2>
+        </div>
     </div>
 </template>
 

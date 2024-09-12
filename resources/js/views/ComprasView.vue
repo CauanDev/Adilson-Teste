@@ -103,79 +103,88 @@ export default {
         applyFilter(filter) {
             this.loading = true;
 
-            // Aplicar filtro no array allCompras
             const filteredCompras = this.allCompras.filter(compra => {
-                let isValid = true;
+                let isValid = true; 
+                const string = "produto apagado"
 
-                if (filter.fornecedor) {
-                    const nameFornecedor = compra.produto.marca.fornecedor.name.toLowerCase();
-                    const nameFornecedorFilter = filter.fornecedor.toLowerCase();
-                    if (!nameFornecedor.includes(nameFornecedorFilter)) isValid = false;
-                }
+                // Verificar "Produto Apagado" no nome, fornecedor, marca ou segmento
+                const isProdutoApagado =
+                    (filter.name && string.includes(filter.name.toLowerCase())) ||
+                    (filter.fornecedor && string.includes(filter.fornecedor.toLowerCase())) ||
+                    (filter.marca && string.includes(filter.marca.toLowerCase())) ||
+                    (filter.segmento && string.includes(filter.segmento.toLowerCase()))
+          
+               
+                if (isProdutoApagado) {
+                    // Mostrar apenas as compras onde compra.produto é null
+                    if (compra.produto !== null) {
+                        isValid = false;
+                    }
+                } else {
+                    // Continuar aplicando os outros filtros se "Produto Apagado" não for detectado
 
-                // Verificar nome do produto
-                if (filter.name) {
-                    const nameProduto = compra.produto.name.toLowerCase();
-                    const filterName = filter.name.toLowerCase();
-                    if (!nameProduto.includes(filterName)) isValid = false;
-                }
+                    if (filter.fornecedor && compra.produto) {
+                        const nameFornecedor = compra.produto.marca.fornecedor.name.toLowerCase();
+                        const nameFornecedorFilter = filter.fornecedor.toLowerCase();
+                        if (!nameFornecedor.includes(nameFornecedorFilter)) isValid = false;
+                    }
 
-                // Verificar data mínima
-                if (filter.dataMinima) {
-                    const dataMinima = this.formatDate(filter.dataMinima)
-                    const createdAt = format(new Date(compra.created_at), 'dd-MM-yyyy')
-                    if (createdAt >= dataMinima) isValid = false;
-                }
+                    if (filter.name && compra.produto) {
+                        const nameProduto = compra.produto.name.toLowerCase();
+                        const filterName = filter.name.toLowerCase();
+                        if (!nameProduto.includes(filterName)) isValid = false;
+                    }
 
-                // Verificar data máxima
-                if (filter.dataMaxima) {
-                    const dataMaxima = this.formatDate(filter.dataMaxima)
-                    const createdAt = format(new Date(compra.created_at), 'dd-MM-yyyy')
-                    if (createdAt <= dataMaxima) isValid = false;
-                }
-                if (filter.valorMin) {
-                    const valorMinNum = parseFloat(filter.valorMin.replace('R$', '').trim().replace(',', '.'));
-                    if (compra.total < valorMinNum) isValid = false;
-                }
+                    if (filter.dataMinima) {
+                        const dataMinima = this.formatDate(filter.dataMinima);
+                        const createdAt = format(new Date(compra.created_at), 'dd-MM-yyyy');
+                        if (createdAt >= dataMinima) isValid = false;
+                    }
 
-                // Verificar valor máximo
-                if (filter.valorMax) {
-                    const valorMaxNum = parseFloat(filter.valorMax.replace('R$', '').trim().replace(',', '.'));
-                    if (compra.total > valorMaxNum) isValid = false;
-                }
+                    if (filter.dataMaxima) {
+                        const dataMaxima = this.formatDate(filter.dataMaxima);
+                        const createdAt = format(new Date(compra.created_at), 'dd-MM-yyyy');
+                        if (createdAt <= dataMaxima) isValid = false;
+                    }
 
+                    if (filter.valorMin) {
+                        const valorMinNum = parseFloat(filter.valorMin.replace('R$', '').trim().replace(',', '.'));
+                        if (compra.total < valorMinNum) isValid = false;
+                    }
 
-                // Verificar quantidade mínima
-                if (filter.quantidadeMin) {
-                    if (compra.quantidade < filter.quantidadeMin) isValid = false;
-                }
+                    if (filter.valorMax) {
+                        const valorMaxNum = parseFloat(filter.valorMax.replace('R$', '').trim().replace(',', '.'));
+                        if (compra.total > valorMaxNum) isValid = false;
+                    }
 
-                // Verificar quantidade máxima
-                if (filter.quantidadeMax) {
-                    if (compra.quantidade > filter.quantidadeMax) isValid = false;
-                }
+                    if (filter.quantidadeMin) {
+                        if (compra.quantidade < filter.quantidadeMin) isValid = false;
+                    }
 
-                // Verificar marca
-                if (filter.marca) {
-                    const nameMarca = compra.produto.marca.nome.toLowerCase();
-                    const filterMarca = filter.marca.toLowerCase();
+                    if (filter.quantidadeMax) {
+                        if (compra.quantidade > filter.quantidadeMax) isValid = false;
+                    }
 
-                    if (!nameMarca.includes(filterMarca)) isValid = false;
-                }
-                // Verificar segmento
-                if (filter.segmento) {
-                    const nameSegmento = compra.produto.marca.segmento.toLowerCase();
-                    const filterSegmento = filter.segmento.toLowerCase();
-                    if (!nameSegmento.includes(filterSegmento)) isValid = false;
+                    if (filter.marca && compra.produto) {
+                        const nameMarca = compra.produto.marca.nome.toLowerCase();
+                        const filterMarca = filter.marca.toLowerCase();
+                        if (!nameMarca.includes(filterMarca)) isValid = false;
+                    }
+
+                    if (filter.segmento && compra.produto!==null) {
+                        const nameSegmento = compra.produto.marca.segmento.toLowerCase();
+                        const filterSegmento = filter.segmento.toLowerCase();
+                        if (!nameSegmento.includes(filterSegmento)) isValid = false;
+                    }
                 }
 
                 return isValid;
             });
 
-            this.mapCompras(filteredCompras)
-
+            this.mapCompras(filteredCompras);
             this.loading = false;
         },
+
 
         async addFuncionario(funcionario) {
             this.loading = true;

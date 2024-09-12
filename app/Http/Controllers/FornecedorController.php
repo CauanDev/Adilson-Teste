@@ -14,10 +14,8 @@ class FornecedorController extends Controller
     // Método para listar todos os fornecedores
     public function index(AuthRequest $request)
     {
-        // Recupera todos os fornecedores com suas marcas, ordenados por ID em ordem decrescente
         $fornecedores = Fornecedor::with('marcas')->orderBy('id', 'DESC')->get();
     
-        // Mapeia os fornecedores para incluir as marcas
         $fornecedoresComMarcas = $fornecedores->map(function($fornecedor) {
             return [
                 'id' => $fornecedor->id,
@@ -38,7 +36,6 @@ class FornecedorController extends Controller
             ];
         });
     
-        // Retorna a lista de fornecedores com suas marcas em formato JSON
         return response()->json([
             'status' => true,
             'fornecedores' => $fornecedoresComMarcas,
@@ -49,19 +46,17 @@ class FornecedorController extends Controller
     // Método para criar um novo fornecedor
     public function store(AuthRequest $request)
     {
-        DB::beginTransaction();  // Inicia a transação
+        DB::beginTransaction();
         try
         {
-            // Cria um novo fornecedor com os dados fornecidos na requisição
             $fornecedor = Fornecedor::create([
                 'name' => $request->name,
                 'email' => $request->email,
-                'status' => "Ativo"  // Define o status inicial como "Ativo"
+                'status' => "Ativo"
             ]);
 
-            DB::commit();  // Comita a transação
+            DB::commit();  
 
-            // Retorna o fornecedor criado com uma mensagem de sucesso
             return response()->json([
                 'status' => true,
                 'fornecedor' => $fornecedor,
@@ -70,7 +65,7 @@ class FornecedorController extends Controller
         }
         catch(Exception $e)
         {
-            DB::rollBack();  // Reverte a transação em caso de erro
+            DB::rollBack();  
             return response()->json([
                 'status' => false,
                 'message' => $e->getMessage(),
@@ -82,7 +77,6 @@ class FornecedorController extends Controller
     public function filter(AuthRequest $request)
     {
         if (isset($request->fornecedorID)) {
-            // Se o ID do fornecedor for fornecido, retorna os produtos desse fornecedor
             $produtos = Produto::where('fornecedor_id', $request->fornecedorID)->get();
             return response()->json([
                 'status' => true,
@@ -90,10 +84,8 @@ class FornecedorController extends Controller
             ], 201);
         }
         
-        // Inicializa a query base para fornecedores
         $query = Fornecedor::query();
         
-        // Aplica filtros conforme os parâmetros fornecidos na requisição
         if (isset($request->nome)) {
             $query->where('name', $request->nome);
         }
@@ -111,12 +103,7 @@ class FornecedorController extends Controller
             $produtoIds = Produto::where('name', 'like', '%' . $request->produto . '%')->pluck('fornecedor_id');
             $query->whereIn('id', $produtoIds);
         }
-        if (isset($request->ordenar)) {
-            if($request->ordenar=="porProduto")$query->withCount('produtos')->orderBy('produtos_count', 'DESC');
-            else $query->orderBy('name', 'asc');
-        }
 
-        // Retorna os fornecedores filtrados em formato JSON
         return response()->json([
             'status' => true,
             'fornecedores' => $query->get(),
@@ -129,18 +116,12 @@ class FornecedorController extends Controller
         DB::beginTransaction();  // Inicia a transação
         try
         {
-            // Busca o fornecedor pelo ID fornecido
-            $fornecedor = Fornecedor::findOrFail($id);
-    
-            // Alterna o status entre "Ativo" e "Suspenso"
-            $fornecedor->status = ($fornecedor->status === 'Ativo') ? 'Suspenso' : 'Ativo';
-    
-            // Salva as mudanças
+            $fornecedor = Fornecedor::findOrFail($id);    
+            $fornecedor->status = ($fornecedor->status === 'Ativo') ? 'Suspenso' : 'Ativo';    
             $fornecedor->save();
     
-            DB::commit();  // Comita a transação
+            DB::commit();  
     
-            // Retorna o fornecedor atualizado com uma mensagem de sucesso
             return response()->json([
                 'status' => true,
                 'fornecedor' => $fornecedor,
@@ -149,7 +130,7 @@ class FornecedorController extends Controller
         }
         catch(Exception $e)
         {
-            DB::rollBack();  // Reverte a transação em caso de erro
+            DB::rollBack();  
             return response()->json([
                 'status' => false,
                 'message' => $e->getMessage(),
@@ -163,16 +144,13 @@ class FornecedorController extends Controller
         DB::beginTransaction();  // Inicia a transação
         try
         {
-            // Busca o fornecedor pelo ID fornecido
             $fornecedor = Fornecedor::findOrFail($request->id);
-            $fornecedor->name = $request->name;  // Atualiza o nome do fornecedor
+            $fornecedor->name = $request->name; 
             $fornecedor->email = $request->email; 
-            // Salva as mudanças
             $fornecedor->save();
     
-            DB::commit();  // Comita a transação
+            DB::commit();
     
-            // Retorna o fornecedor atualizado com uma mensagem de sucesso
             return response()->json([
                 'status' => true,
                 'fornecedor' => $fornecedor,
@@ -181,7 +159,7 @@ class FornecedorController extends Controller
         }
         catch(Exception $e)
         {
-            DB::rollBack();  // Reverte a transação em caso de erro
+            DB::rollBack(); 
             return response()->json([
                 'status' => false,
                 'message' => $e->getMessage(),
@@ -192,11 +170,10 @@ class FornecedorController extends Controller
     // Método para obter detalhes de um fornecedor específico pelo ID
     public function details(AuthRequest $request, $id)
     {
-        DB::beginTransaction();  // Inicia a transação
-        $fornecedor = Fornecedor::findOrFail($id);  // Busca o fornecedor pelo ID fornecido
-        DB::commit();  // Comita a transação
+        DB::beginTransaction(); 
+        $fornecedor = Fornecedor::findOrFail($id);  
+        DB::commit(); 
 
-        // Retorna os detalhes do fornecedor em formato JSON
         return response()->json([
             'status' => true,
             'fornecedor' => $fornecedor,
@@ -207,16 +184,14 @@ class FornecedorController extends Controller
     // Método para excluir um fornecedor
     public function destroy(AuthRequest $request, $id)
     {
-        DB::beginTransaction();  // Inicia a transação
+        DB::beginTransaction();  
         try
         {
-            // Busca o fornecedor pelo ID fornecido
             $fornecedor = Fornecedor::findOrFail($id);
-            $fornecedor->delete();  // Exclui o fornecedor
+            $fornecedor->delete();  
 
-            DB::commit();  // Comita a transação
+            DB::commit();  
 
-            // Retorna uma mensagem de sucesso após a exclusão
             return response()->json([
                 'status' => true,
                 'message' => "Fornecedor excluído com sucesso!",
@@ -224,7 +199,7 @@ class FornecedorController extends Controller
         }
         catch(Exception $e)
         {
-            DB::rollBack();  // Reverte a transação em caso de erro
+            DB::rollBack();  
             return response()->json([
                 'status' => false,
                 'message' => $e->getMessage(),

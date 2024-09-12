@@ -13,12 +13,10 @@ class MarcasController extends Controller
 {
     public function index(AuthRequest $request)
     {
-        // Recupera todas as marcas, incluindo o nome do fornecedor e os produtos associados, ordenadas por ID em ordem decrescente
         $marcas = Marcas::with(['fornecedor:id,name', 'produtos']) // Carrega o relacionamento com o fornecedor e produtos
             ->orderBy('id', 'DESC')
             ->get();
 
-        // Retorna a lista de marcas com os nomes dos fornecedores e produtos associados em formato JSON
         return response()->json([
             'status' => true,
             'marcas' => $marcas->map(function ($marca) {
@@ -35,7 +33,6 @@ class MarcasController extends Controller
                             'id' => $produto->id,
                             'nome' => $produto->name,
                             'preco' => $produto->preco,
-                            // Adicione outros campos do produto que desejar incluir
                         ];
                     }),
                 ];
@@ -44,23 +41,20 @@ class MarcasController extends Controller
     }
     public function destroy(Request $request)
     {
-        DB::beginTransaction();  // Inicia a transação
+        DB::beginTransaction(); 
         try {
-            // Encontra a marca pelo ID
             $marca = Marcas::findOrFail($request->id);
 
-            // Deleta a marca
             $marca->delete();
 
-            DB::commit();  // Comita a transação
+            DB::commit();  
 
-            // Retorna uma mensagem de sucesso
             return response()->json([
                 'status' => true,
                 'message' => "Marca de produto deletada com sucesso!",
             ], 200);
         } catch (Exception $e) {
-            DB::rollBack();  // Reverte a transação em caso de erro
+            DB::rollBack();  
             return response()->json([
                 'status' => false,
                 'message' => $e->getMessage(),
@@ -73,7 +67,6 @@ class MarcasController extends Controller
     {
         DB::beginTransaction();  // Inicia a transação
         try {
-            // Cria uma nova marca de produto com os dados fornecidos na requisição
             $marcaProduto = Marcas::create([
                 'fornecedor_id' => $request->fornecedor_id,
                 'nome' => $request->nome,
@@ -81,16 +74,15 @@ class MarcasController extends Controller
                 'status' => "Ativo"
             ]);
 
-            DB::commit();  // Comita a transação
+            DB::commit();
 
-            // Retorna a marca de produto criada com uma mensagem de sucesso
             return response()->json([
                 'status' => true,
                 'marca_produto' => $marcaProduto,
                 'message' => "Marca de produto cadastrada com sucesso!",
             ], 201);
         } catch (Exception $e) {
-            DB::rollBack();  // Reverte a transação em caso de erro
+            DB::rollBack();  
             return response()->json([
                 'status' => false,
                 'message' => $e->getMessage(),
@@ -100,9 +92,8 @@ class MarcasController extends Controller
 
     public function update(AuthRequest $request)
     {
-        DB::beginTransaction();  // Inicia a transação
+        DB::beginTransaction();
         try {
-            // Encontra a marca pelo ID
             $marca = Marcas::findOrFail($request->id);
             if ($request->status) {
                 $marca->update([
@@ -117,16 +108,15 @@ class MarcasController extends Controller
             }
 
 
-            DB::commit();  // Comita a transação
+            DB::commit(); 
 
-            // Retorna a marca atualizada com uma mensagem de sucesso
             return response()->json([
                 'status' => true,
                 'marca_produto' => $marca,
                 'message' => "Marca de produto atualizada com sucesso!",
             ], 200);
         } catch (Exception $e) {
-            DB::rollBack();  // Reverte a transação em caso de erro
+            DB::rollBack();  
             return response()->json([
                 'status' => false,
                 'message' => $e->getMessage(),

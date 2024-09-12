@@ -124,11 +124,8 @@ export default {
 };
 </script>
 <style scoped>
-/* Estilize a classe 'active' como desejar */
 .active {
     font-weight: bold;
-    /* Exemplo de estilo para item ativo */
     color: #000000;
-    /* Exemplo de cor para item ativo */
 }
 </style>

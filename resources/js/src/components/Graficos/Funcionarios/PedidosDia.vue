@@ -1,12 +1,17 @@
 <template>
     <div class="flex text-center bg-[#dbdbdb] w-1/2 p-2 rounded-lg mb-2 shadow-xl border-[1px] border-gray-400">
         <div class="w-full">
-            <h2 class="text-xl font-bold mb-2">{{this.cliente? 'Compras ' :'Pedidos '}} por Dia e Sexo</h2>            
-            <apexchart type="line" width="100%" height="200" :options="barChartOptions" :series="barChartSeries" />
-
+            <div v-if="barChartSeries.length > 0">
+                <h2 class="text-xl font-bold mb-2">{{ this.cliente ? 'Compras' : 'Pedidos' }} por Dia e Sexo</h2>            
+                <apexchart type="line" width="100%" height="200" :options="barChartOptions" :series="barChartSeries" />
+            </div>
+            <div v-else class="flex justify-center items-center h-full">
+                <h2 class="text-xl font-bold mb-2 rotate-12">Sem Dados Disponíveis</h2>
+            </div>
         </div>
     </div>
 </template>
+
 
 <script>
 import VueApexCharts from 'vue3-apexcharts';
@@ -21,8 +26,8 @@ export default {
             type: Array,
             required: true,
         },
-        cliente:{
-            type:Boolean,
+        cliente: {
+            type: Boolean,
             default: false
         }
     },
@@ -59,7 +64,7 @@ export default {
 
             data.forEach(pedido => {
                 const date = this.formatDate(pedido.created_at);
-                const sexo = this.cliente? pedido.cliente_sexo :pedido.funcionario_sexo;
+                const sexo = this.cliente ? pedido.cliente_sexo : pedido.funcionario_sexo;
                 if (!vendasPorDiaSexo[sexo][date]) {
                     vendasPorDiaSexo[sexo][date] = 0;
                 }

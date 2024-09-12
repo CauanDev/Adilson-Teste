@@ -70,6 +70,7 @@ export default {
             console.log(filter.valorMax)
             const filteredProdutos = this.allProdutos.filter(produto => {
                 let isValid = true
+                console.log(filter.name)
                 if (filter.name) if (!produto.name.toLowerCase().includes(filter.name.toLowerCase())) isValid = false
 
                 if (filter.marca) if (!produto.marca.toLowerCase().includes(filter.marca.toLowerCase())) isValid = false

@@ -1,5 +1,5 @@
 <template>
-    <div>
+    <div class=" overflow-y-auto">
         <div class="flex items-center justify-center sm:ml-0 ml-4 whitespace-nowrap">
             <table class="border-separate border-spacing-y-0.5 text-sm w-full max-w-sm mx-auto">
                 <thead class="hidden sm:table-header-group">

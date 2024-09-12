@@ -1,14 +1,17 @@
 <template>
-
-
-
     <div class="flex text-center bg-[#dbdbdb] p-2 rounded-lg mb-2 shadow-2xl border-[1px] border-gray-400">
-        <div class="flex-1">
-            <h2 class="text-xl font-bold mb-2">{{ this.funcionario ? 'Funcionários com Maior Valor de Vendas' : 'Clientes com Maior Valor de Compras' }}</h2>
-            <apexchart ref="barChart" type="bar" :options="chartOptions" :series="chartSeries" />
+      <div class="flex-1">
+        <div v-if="chartSeries.length > 0">
+          <h2 class="text-xl font-bold mb-2">{{ this.funcionario ? 'Funcionários com Maior Valor de Vendas' : 'Clientes com Maior Valor de Compras' }}</h2>
+          <apexchart ref="barChart" type="bar" :options="chartOptions" :series="chartSeries" />
         </div>
+        <div v-else class="flex justify-center items-center h-full">
+          <h2 class="text-xl font-bold mb-2 rotate-12">Sem Dados Disponíveis</h2>
+        </div>
+      </div>
     </div>
-</template>
+  </template>
+  
 
 <script>
 import ApexCharts from 'apexcharts';

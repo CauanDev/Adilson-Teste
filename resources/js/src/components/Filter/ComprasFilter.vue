@@ -34,7 +34,6 @@
 </template>
 
 <script>
-import http from "../../services/http.js"
 import InputAge from "../Inputs/InputAge.vue"
 import InputNumber from "../Inputs/InputNumber.vue";
 import InputSalario from "../Inputs/InputSalario.vue";
@@ -44,9 +43,12 @@ import AccorDion from "../Accordion/AccorDion.vue";
 export default {
     name: "FuncionarioFilter",
     components: { InputAge, InputNumber, InputSalario, InputName, AccorDion },
+    emits: ['applyFilter'],
+
     data() {
         return {
             name: '',
+            selectedSegmento: '',
             status: '',
             dataMinima: '',
             dataMaxima: '',
@@ -55,81 +57,43 @@ export default {
             quantidadeMin: '',
             quantidadeMax: '',
             selectedMarca: '',
-            selectedSegmento: '',
             marcas: [],
             segmentos: [],
             fornecedor: ''
         };
     },
-    computed: {
-        isFormValid() {
-            const valorMin = Number(this.valorMin);
-            const valorMax = Number(this.valorMax);
-            const quantidadeMin = Number(this.quantidadeMin);
-            const quantidadeMax = Number(this.quantidadeMax);
-
-            const valorRangeValid = !this.valorMin || !this.valorMax || valorMin <= valorMax;
-            const quantidadeRangeValid = !this.quantidadeMin || !this.quantidadeMax || quantidadeMin <= quantidadeMax;
-            const dataRangeValid = !this.dataMinima || !this.dataMaxima || new Date(this.dataMinima) <= new Date(this.dataMaxima);
-
-            return (this.name.trim() !== '' ||
-                this.status !== '' ||
-                this.dataMinima !== null ||
-                this.dataMaxima !== '' ||
-                this.selectedMarca !== '' ||
-                this.selectedSegmento !== '' ||
-                this.fornecedor.trim() !== '' ||  // Incluindo a validação do fornecedor
-                (this.valorMin || this.valorMax) ||
-                (this.quantidadeMin || this.quantidadeMax)) &&
-                valorRangeValid &&
-                quantidadeRangeValid &&
-                dataRangeValid;
-        }
-    },
 
     methods: {
-        validateName(field) {
-            if (field === 'name' && this.name.trim() === '') {
-                this.name = '';
-            }
-        },
-        validateNumericInput(field) {
-            // Remove caracteres não numéricos
-            this[field] = this[field].replace(/[^0-9]/g, '');
-        },
-        validateName(field) {
-            if (this[field].trim() === '') {
-                this[field] = '';
-            }
-        },
 
         applyFilter() {
-            this.$emit('applyFilter', {
-                name: this.name.trim() || null,
-                status: this.status || null,
-                dataMinima: this.dataMinima || null,
-                dataMaxima: this.dataMaxima || null,
-                valorMin: this.valorMin || null,
-                valorMax: this.valorMax || null,
-                quantidadeMin: this.quantidadeMin || null,
-                quantidadeMax: this.quantidadeMax || null,
-                marca: this.selectedMarca || null,
-                segmento: this.selectedSegmento || null,
-                fornecedor: this.fornecedor.trim()
-            });
-        },
-        async getMarca() {
-            try {
-                const { data } = await http.get('/marcas');
-                this.marcas = data.marcas.map((marca) => marca.nome);
-                this.segmentos = [...new Set(data.marcas.map((marca) => marca.segmento))]; // Assumindo que segmentos estão no mesmo endpoint
-            } catch (error) {
-                console.error("Erro ao buscar marcas e segmentos", error);
-            }
+            const filter={}
+            if (this.name) filter.name = this.name
+            if (this.status !== 'all') filter.status = this.status;
+            if (this.quantidadeMinima) filter.quantidadeMinima = this.quantidadeMinima;
+            if (this.quantidadeMaxima) filter.quantidadeMaxima = this.quantidadeMaxima;
+            if (this.dataMinima) filter.dataMinima = this.dataMinima;
+            if (this.dataMaxima) filter.dataMaxima = this.dataMaxima;
+            if (this.selectedSegmento) filter.segmento = this.selectedSegmento
+            if (this.fornecedor.trim()) filter.fornecedor = this.fornecedor
+            if (this.selectedMarca.trim()) filter.marca = this.marca
+            if (this.valorMax) filter.valorMax = this.valorMax
+            if (this.valorMin) filter.valorMin = this.valorMin
+            // this.$emit('applyFilter', {
+            //     name: this.name || null,
+            //     status: this.status || null,
+            //     dataMinima: this.dataMinima || null,
+            //     dataMaxima: this.dataMaxima || null,
+            //     valorMin: this.valorMin || null,
+            //     valorMax: this.valorMax || null,
+            //     quantidadeMin: this.quantidadeMin || null,
+            //     quantidadeMax: this.quantidadeMax || null,
+            //     marca: this.selectedMarca || null,
+            //     segmento: this.selectedSegmento || null,
+            //     fornecedor: this.fornecedor.trim()
+            // });
+            this.$emit('applyFilter',filter)
         }
     },
-    created() {
-        this.getMarca();
-    }
+
 }
 </script>

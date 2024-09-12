@@ -23,32 +23,32 @@ services:
             - sail
         depends_on:
             - pgsql
-    pgsql:
-        image: 'postgres:15'
-        ports:
-            - '5433:5432'
-        environment:
-            PGPASSWORD: '${DB_PASSWORD:-secret}'
-            POSTGRES_DB: 'teste_engenharia'
-            POSTGRES_USER: 'prod_admin'
-            POSTGRES_PASSWORD: 'V8z1X3EBLBXka8irpJ'
+pgsql:
+    image: 'postgres:15'
+    ports:
+        - '5433:5432'
+    environment:
+        PGPASSWORD: 'V8z1X3EBLBXka8irpJ'
+        POSTGRES_DB: 'teste_engenharia'
+        POSTGRES_USER: 'prod_admin'
+        POSTGRES_PASSWORD: 'V8z1X3EBLBXka8irpJ'
+    volumes:
+        - 'sail-pgsql:/var/lib/postgresql/data'
+        - './vendor/laravel/sail/database/pgsql/create-testing-database.sql:/docker-entrypoint-initdb.d/10-create-testing-database.sql'
+    networks:
+        - sail
+    healthcheck:
+        test:
+            - CMD
+            - pg_isready
+            - '-q'
+            - '-d'
+            - '${DB_DATABASE}'
+            - '-U'
+            - '${DB_USERNAME}'
+        retries: 3
+        timeout: 5s
 
-        volumes:
-            - 'sail-pgsql:/var/lib/postgresql/data'
-            - './vendor/laravel/sail/database/pgsql/create-testing-database.sql:/docker-entrypoint-initdb.d/10-create-testing-database.sql'
-        networks:
-            - sail
-        healthcheck:
-            test:
-                - CMD
-                - pg_isready
-                - '-q'
-                - '-d'
-                - '${DB_DATABASE}'
-                - '-U'
-                - '${DB_USERNAME}'
-            retries: 3
-            timeout: 5s
 networks:
     sail:
         driver: bridge
